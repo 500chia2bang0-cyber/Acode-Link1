@@ -1,0 +1,1435 @@
+* {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000000;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ===== CONTAINER ===== */
+#gameContainer {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: #000000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ===== MÀN HÌNH GAME (11:4 ngang) ===== */
+/* ⭐ MÀN HÌNH GAME — BẮT BUỘC NGANG */
+#gameScreen {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: #1a1a2e;
+    overflow: hidden;
+}
+
+/* ⭐ NẾU ĐANG DỌC → HIỆN THÔNG BÁO XOAY NGANG */
+@media (orientation: portrait) {
+    #gameScreen::after {
+        content: '📱 VUI LÒNG XOAY NGANG ĐIỆN THOẠI 🔄';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #0a0a0f;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+        text-align: center;
+        padding: 50px;
+        z-index: 9999;
+        animation: rotateHint 2s infinite;
+    }
+}
+
+@keyframes rotateHint {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+}
+
+#gameCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: #16213e;
+}
+
+/* ===== UI OVERLAY ===== */
+#ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+#ui > * {
+    pointer-events: auto;
+}
+
+/* ===== THANH TRÊN ===== */
+#topBar {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    gap: 10px;
+}
+
+#coins {
+    color: #ffd700;
+    font-size: clamp(11px, 1.2vw, 15px);
+    font-weight: bold;
+    min-width: 50px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+#stats {
+    flex: 0 0 35%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.statBar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #fff;
+    font-size: clamp(8px, 0.9vw, 12px);
+}
+
+.statBar span:first-child {
+    min-width: 20px;
+    font-weight: bold;
+    font-size: clamp(8px, 0.8vw, 11px);
+}
+
+.barBg {
+    flex: 1;
+    height: clamp(5px, 0.7vh, 8px);
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.barFill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.15s;
+}
+
+#hpBar {
+    background: linear-gradient(90deg, #ff6b6b, #ff4757);
+}
+
+#mpBar {
+    background: linear-gradient(90deg, #4a69bd, #3742fa);
+}
+
+#hpText, #mpText {
+    min-width: 35px;
+    text-align: right;
+    font-size: clamp(7px, 0.8vw, 10px);
+    opacity: 0.6;
+}
+
+/* ===== JOYSTICK DI CHUYỂN (trái) ===== */
+#joystickArea {
+    position: fixed;
+    top: 68%;
+    transform: translate(-50%, -50%);
+    left: calc((100vw - 100vh * 5 / 3) / 3);
+    width: clamp(110px, 12vw, 110px);
+    height: clamp(110px, 12vw, 110px);
+    pointer-events: auto;
+    touch-action: none;
+    z-index: 10;
+}
+
+/* ===== JOYSTICK BẮN (phải) ===== */
+#fireJoystickArea {
+    position: fixed;
+    top: 68%;
+    transform: translate(50%, -50%);
+    right: calc((100vw - 100vh * 5 / 3) / 3);
+    width: clamp(110px, 12vw, 110px);
+    height: clamp(110px, 12vw, 110px);
+    pointer-events: auto;
+    touch-action: none;
+    z-index: 10;
+}
+
+/* ===== JOYSTICK BASE ===== */
+#joystickBase, #fireJoystickBase {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+#joystickBase {
+    background: rgba(79, 195, 247, 0.15);
+    border: 2px solid rgba(79, 195, 247, 0.25);
+}
+
+#fireJoystickBase {
+    background: rgba(255, 215, 0, 0.12);
+    border: 2px solid rgba(255, 215, 0, 0.2);
+}
+
+/* ===== JOYSTICK KNOB ===== */
+#joystickKnob, #fireJoystickKnob {
+    width: clamp(54px, 6vw, 74px);
+    height: clamp(54px, 6vw, 74px);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: none;
+    pointer-events: none;
+}
+
+#joystickKnob {
+    background: radial-gradient(circle at 35% 35%, rgba(79, 195, 247, 0.7), rgba(79, 195, 247, 0.2));
+    border: 2px solid rgba(79, 195, 247, 0.4);
+    box-shadow: 0 0 20px rgba(79, 195, 247, 0.15);
+}
+
+#fireJoystickKnob {
+    background: radial-gradient(circle at 35% 35%, rgba(255, 215, 0, 0.6), rgba(255, 215, 0, 0.15));
+    border: 2px solid rgba(255, 215, 0, 0.35);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.12);
+}
+
+/* ===== CHỈ BÁO HƯỚNG BẮN ===== */
+#directionIndicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    display: none;
+}
+
+#directionIndicator.active {
+    display: block;
+}
+
+#directionIndicator::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    width: 4px;
+    height: 28px;
+    background: linear-gradient(0deg, rgba(255, 215, 0, 0), rgba(255, 215, 0, 0.8));
+    border-radius: 2px;
+    transform-origin: center top;
+}
+
+/* ===== NÚT KHO (trên cùng viền đen trái) ===== */
+#inventoryBtn {
+    position: fixed;
+    top: 12%;
+    transform: translate(-50%, 0);
+    left: calc((100vw - 100vh * 5 / 3) / 7.8);
+    width: clamp(55px, 6vw, 70px);
+    height: clamp(55px, 6vw, 70px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(168, 85, 247, 0.4), rgba(168, 85, 247, 0.1));
+    border: 2px solid rgba(168, 85, 247, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 25px rgba(168, 85, 247, 0.2);
+    z-index: 10;
+    pointer-events: auto;
+    transition: transform 0.1s;
+}
+
+#inventoryBtn:active {
+    transform: translate(-50%, 0) scale(0.9);
+}
+
+#inventoryBtn .btnIcon {
+    font-size: clamp(22px, 2.5vw, 30px);
+    filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.5));
+}
+
+/* ===== BẢNG KHO ĐỒ ===== */
+#inventoryPanel {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: clamp(280px, 45vw, 380px);
+    height: clamp(250px, 55vh, 400px);
+    background: rgba(15, 15, 25, 0.96);
+    border: 2px solid rgba(168, 85, 247, 0.6);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 50px rgba(168, 85, 247, 0.4);
+    display: none;
+    z-index: 20;
+    pointer-events: auto;
+    overflow: hidden;
+    touch-action: pan-y;
+}
+
+#inventoryPanel.open {
+    display: block;
+}
+
+#inventoryScroll {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 20px;
+    bottom: 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+#inventoryScroll::-webkit-scrollbar {
+    display: none;
+}
+
+#inventoryGrid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    padding: 4px;
+    width: 100%;
+}
+
+.invSlot {
+    aspect-ratio: 1;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    min-height: 40px;
+    min-width: 0;
+}
+
+.invSlot:active {
+    background: rgba(168, 85, 247, 0.3);
+    border-color: rgba(168, 85, 247, 0.8);
+}
+
+.invSlot .invIcon {
+    font-size: clamp(14px, 1.6vw, 20px);
+    pointer-events: none;
+    text-align: center;
+    line-height: 1;
+}
+
+/* ===== SCROLLBAR ===== */
+#inventoryScrollbar {
+    position: absolute;
+    top: 8px;
+    right: 4px;
+    bottom: 8px;
+    width: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    pointer-events: auto;
+    z-index: 10;
+}
+
+#inventoryScrollThumb {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 60px;
+    background: linear-gradient(180deg, rgba(168, 85, 247, 0.9), rgba(168, 85, 247, 0.6));
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+
+#inventoryScrollThumb:active {
+    background: linear-gradient(180deg, rgba(168, 85, 247, 1), rgba(168, 85, 247, 0.8));
+}
+
+/* ===== HOTBAR ===== */
+#hotbar {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    pointer-events: auto;
+    z-index: 5;
+    touch-action: manipulation;
+}
+
+.slot {
+    position: relative;
+    width: clamp(38px, 5vw, 52px);
+    height: clamp(38px, 5vw, 52px);
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    pointer-events: auto;
+    touch-action: manipulation;
+}
+
+.slot:active {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(79, 195, 247, 0.5);
+}
+
+.slot.selected {
+    background: rgba(79, 195, 247, 0.2);
+    border-color: rgba(79, 195, 247, 0.8);
+    box-shadow: 0 0 15px rgba(79, 195, 247, 0.3);
+}
+
+.slotIcon {
+    font-size: clamp(18px, 2.2vw, 26px);
+    pointer-events: none;
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slotIcon.empty {
+    opacity: 0.2;
+    width: 100%;
+    height: 100%;
+}
+
+.slotCount {
+    position: absolute;
+    bottom: 2px;
+    right: 5px;
+    font-size: clamp(10px, 1.1vw, 13px);
+    color: #ffffff;
+    font-weight: bold;
+    pointer-events: none;
+    text-shadow: 
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000,
+        0 0 6px rgba(0,0,0,0.8);
+    display: none;
+}
+
+.slotCount.visible {
+    display: block;
+}
+
+/* ===== THÔNG BÁO ===== */
+.notification {
+    position: fixed;
+    top: 0%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: 2px solid rgba(168, 85, 247, 0.6);
+    font-size: clamp(12px, 1.3vw, 15px);
+    font-weight: bold;
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+    z-index: 1000;
+    pointer-events: none;
+    animation: slideDown 0.3s ease-out;
+    white-space: nowrap;
+}
+
+.notification.fade-out {
+    animation: fadeOut 0.3s ease-in forwards;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+}
+
+/* Ẩn scrollbar */
+::-webkit-scrollbar {
+    display: none;
+}
+/* ===== NÚT TALK (ẩn mặc định) ===== */
+/* ===== NÚT TALK (hiện trên nút Fire) ===== */
+#talkBtn {
+    position: fixed;
+    top: 40%;
+    transform: translate(50%, -50%);
+    right: calc((100vw - 100vh * 5 / 3) / 4);
+    width: clamp(60px, 7vw, 80px);
+    height: clamp(60px, 7vw, 80px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(100, 255, 100, 0.6), rgba(100, 255, 100, 0.2));
+    border: 3px solid rgba(100, 255, 100, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 30px rgba(100, 255, 100, 0.6);
+    z-index: 15;
+    pointer-events: auto;
+    transition: transform 0.15s;
+    animation: talkPulse 1s infinite;
+}
+
+#talkBtn:active {
+    transform: translate(50%, -50%) scale(0.9);
+}
+
+#talkBtn .btnIcon {
+    font-size: clamp(25px, 3vw, 35px);
+    filter: drop-shadow(0 0 10px rgba(100, 255, 100, 0.8));
+}
+
+@keyframes talkPulse {
+    0%, 100% {
+        box-shadow: 0 0 30px rgba(100, 255, 100, 0.6);
+    }
+    50% {
+        box-shadow: 0 0 50px rgba(100, 255, 100, 1);
+    }
+}
+
+/* ===== SHOP PANEL ===== */
+/* ===== SHOP PANEL ===== */
+#shopPanel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: clamp(320px, 60vw, 500px);
+    height: clamp(300px, 70vh, 500px);
+    background: rgba(15, 15, 25, 0.98);
+    border: 3px solid rgba(255, 215, 0, 0.8);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 60px rgba(255, 215, 0, 0.5);
+    display: none;
+    flex-direction: column;
+    z-index: 100;
+    pointer-events: auto;
+    overflow: hidden;
+    touch-action: manipulation;
+}
+
+#shopPanel.open {
+    display: flex;
+}
+
+#shopHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: rgba(255, 215, 0, 0.2);
+    color: #ffd700;
+    font-weight: bold;
+    font-size: clamp(14px, 1.5vw, 18px);
+    border-bottom: 2px solid rgba(255, 215, 0, 0.4);
+    flex-shrink: 0;
+}
+
+#shopClose {
+    cursor: pointer;
+    font-size: clamp(20px, 2.5vw, 28px);
+    padding: 2px 12px;
+    border-radius: 6px;
+    background: rgba(255, 50, 50, 0.3);
+    color: #ff6666;
+    border: 2px solid rgba(255, 50, 50, 0.6);
+    transition: all 0.15s;
+    font-weight: bold;
+    pointer-events: auto;
+}
+
+#shopClose:active {
+    background: rgba(255, 50, 50, 0.6);
+    transform: scale(0.9);
+}
+
+#shopCoins {
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.4);
+    color: #ffd700;
+    font-size: clamp(14px, 1.5vw, 18px);
+    font-weight: bold;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* ⭐ VÙNG CUỘN CHÍNH */
+#shopScroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    touch-action: pan-y;
+    padding: 12px;
+    position: relative;
+}
+
+#shopScroll::-webkit-scrollbar {
+    display: none;
+}
+
+#shopContent {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 8px;
+}
+
+.shopItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.shopItem:hover {
+    background: rgba(255, 215, 0, 0.1);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.shopItem .itemIcon {
+    font-size: clamp(28px, 3vw, 40px);
+    min-width: 45px;
+    text-align: center;
+}
+
+.shopItem .itemInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.shopItem .itemName {
+    font-weight: bold;
+    color: #fff;
+    font-size: clamp(13px, 1.3vw, 16px);
+    margin-bottom: 4px;
+}
+
+.shopItem .itemCost {
+    font-size: clamp(11px, 1vw, 13px);
+    color: #aaa;
+}
+
+.shopItem .itemCost .cost-item {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.shopItem .buyBtn {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: clamp(11px, 1.1vw, 14px);
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
+    flex-shrink: 0;
+    pointer-events: auto;
+}
+
+.shopItem .buyBtn:active {
+    transform: scale(0.9);
+}
+
+.shopItem .buyBtn:disabled {
+    background: #555;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.5;
+}
+
+/* ⭐ SCROLLBAR CHO SHOP */
+#shopScrollbar {
+    position: absolute;
+    top: 8px;
+    right: 4px;
+    bottom: 8px;
+    width: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    pointer-events: auto;
+    z-index: 5;
+}
+
+#shopScrollThumb {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 60px;
+    background: linear-gradient(180deg, rgba(255, 215, 0, 0.9), rgba(255, 215, 0, 0.6));
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+#shopScrollThumb:active {
+    background: linear-gradient(180deg, rgba(255, 215, 0, 1), rgba(255, 215, 0, 0.8));
+}
+
+/* Khi mở shop → ẩn UI khác */
+body.shop-open #ui,
+body.shop-open #joystickArea,
+body.shop-open #fireJoystickArea,
+body.shop-open #inventoryBtn,
+body.shop-open #talkBtn {
+    pointer-events: none !important;
+    opacity: 0.3;
+}
+/* ===== LEVEL DISPLAY ===== */
+#levelDisplay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+}
+
+#levelCircle {
+    width: clamp(38px, 4.5vw, 50px);
+    height: clamp(38px, 4.5vw, 50px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
+    border: 3px solid #fff8dc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+    animation: levelPulse 2s infinite;
+}
+
+#levelText {
+    color: #000;
+    font-weight: bold;
+    font-size: clamp(16px, 2vw, 22px);
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes levelPulse {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 215, 0, 1);
+    }
+}
+
+/* ===== EXP BAR ===== */
+#expBar {
+    background: linear-gradient(90deg, #ffd700, #ff8c00) !important;
+}
+
+#expText {
+    min-width: 45px;
+    text-align: right;
+    font-size: clamp(8px, 0.8vw, 10px);
+    opacity: 0.7;
+    color: #ffd700;
+}
+/* ===== BTOKEN DISPLAY ===== */
+#btokenDisplay {
+    color: #00bfff;
+    font-size: clamp(11px, 1.2vw, 15px);
+    font-weight: bold;
+    min-width: 50px;
+    text-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+}
+
+/* ===== WEAPON LEVEL BADGE ===== */
+.slotIcon .weaponLevel {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #000;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 5px;
+    border-radius: 10px;
+    border: 1px solid #fff;
+    z-index: 10;
+}
+
+/* Rarity màu */
+.rarity-common { border-color: #888 !important; }
+.rarity-rare { border-color: #4fc3f7 !important; }
+.rarity-epic { border-color: #ba68c8 !important; }
+.rarity-legendary { border-color: #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.6) !important; }
+
+/* ===== SMITH PANEL (COMPACT) ===== */
+#smithPanel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: clamp(280px, 45vw, 360px);
+    background: rgba(20, 10, 5, 0.98);
+    border: 3px solid rgba(255, 102, 0, 0.8);
+    border-radius: 14px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 60px rgba(255, 102, 0, 0.5);
+    display: none;
+    flex-direction: column;
+    z-index: 100;
+    pointer-events: auto;
+    overflow: hidden;
+}
+
+#smithPanel.open {
+    display: flex;
+}
+
+#smithHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    background: rgba(255, 102, 0, 0.2);
+    color: #ff6600;
+    font-weight: bold;
+    font-size: clamp(13px, 1.4vw, 16px);
+    border-bottom: 2px solid rgba(255, 102, 0, 0.4);
+}
+
+#smithClose {
+    cursor: pointer;
+    font-size: clamp(16px, 2vw, 22px);
+    padding: 2px 10px;
+    border-radius: 6px;
+    background: rgba(255, 50, 50, 0.3);
+    color: #ff6666;
+    border: 2px solid rgba(255, 50, 50, 0.6);
+    font-weight: bold;
+}
+
+#smithClose:active {
+    background: rgba(255, 50, 50, 0.6);
+    transform: scale(0.9);
+}
+
+#smithBtoken {
+    padding: 6px 14px;
+    background: rgba(0, 0, 0, 0.5);
+    color: #00bfff;
+    font-size: clamp(12px, 1.3vw, 15px);
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 102, 0, 0.3);
+}
+
+/* ⭐ CONTENT - 2 CỘT */
+#smithContent {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ⭐ LAYOUT NGANG (Icon trái - Info phải) */
+.smithWeaponRow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px;
+    background: rgba(255, 102, 0, 0.08);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 102, 0, 0.2);
+}
+
+.smithWeaponIcon {
+    font-size: clamp(45px, 6vw, 65px);
+    text-align: center;
+    filter: drop-shadow(0 0 15px rgba(255, 102, 0, 0.6));
+    flex-shrink: 0;
+    min-width: 70px;
+}
+
+.smithWeaponInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.smithWeaponName {
+    color: #fff;
+    font-size: clamp(14px, 1.5vw, 18px);
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.smithWeaponStat {
+    color: #aaa;
+    font-size: clamp(11px, 1.1vw, 13px);
+    line-height: 1.4;
+}
+
+.smithWeaponStat .highlight {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.smithWeaponStat .btoken {
+    color: #00bfff;
+    font-weight: bold;
+}
+
+.smithError {
+    color: #ff6666;
+    font-size: clamp(12px, 1.3vw, 15px);
+    font-weight: bold;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.5;
+    background: rgba(255, 50, 50, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 50, 50, 0.3);
+}
+
+#smithActions {
+    padding: 10px 14px;
+    display: flex;
+    justify-content: center;
+    border-top: 1px solid rgba(255, 102, 0, 0.2);
+/* ⭐ MAX LEVEL BADGE */
+.maxLevelBadge {
+    color: #ffd700;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    padding: 5px;
+    background: rgba(255, 215, 0, 0.15);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    margin-top: 8px;
+    animation: maxPulse 1.5s infinite;
+}
+
+@keyframes maxPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+    50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+}
+}
+#smithForgeBtn {
+    padding: 10px 28px;
+    background: linear-gradient(135deg, #ff6600, #ff3300);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: clamp(13px, 1.4vw, 16px);
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(255, 102, 0, 0.6);
+    transition: all 0.15s;
+}
+
+#smithForgeBtn:active {
+    transform: scale(0.95);
+}
+
+#smithForgeBtn:disabled {
+    background: #555;
+    box-shadow: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Ẩn UI khác khi mở smith */
+body.smith-open #ui,
+body.smith-open #joystickArea,
+body.smith-open #fireJoystickArea,
+body.smith-open #inventoryBtn,
+body.smith-open #talkBtn {
+    pointer-events: none !important;
+    opacity: 0.3;
+}
+/* ===== SMITH TABS ===== */
+#smithTabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(255, 102, 0, 0.3);
+}
+
+.smithTab {
+    flex: 1;
+    padding: 8px;
+    text-align: center;
+    color: #888;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: clamp(11px, 1.2vw, 14px);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+}
+
+.smithTab.active {
+    color: #ff6600;
+    border-bottom-color: #ff6600;
+    background: rgba(255, 102, 0, 0.1);
+}
+
+.smithTab:active {
+    background: rgba(255, 102, 0, 0.15);
+}
+
+/* Craft item */
+.craftItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(255, 102, 0, 0.08);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 102, 0, 0.2);
+    margin-bottom: 8px;
+}
+
+.craftItem .craftIcon {
+    font-size: 32px;
+    min-width: 45px;
+    text-align: center;
+}
+
+.craftItem .craftInfo {
+    flex: 1;
+}
+
+.craftItem .craftName {
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.craftItem .craftCost {
+    color: #aaa;
+    font-size: 11px;
+}
+
+.craftItem .craftCost .cost-item {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.craftItem .craftBtn {
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #ff6600, #ff3300);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.craftItem .craftBtn:disabled {
+    background: #555;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+/* ===== SHOP TABS ===== */
+#shopTabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.shopTab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    color: #888;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: clamp(12px, 1.3vw, 15px);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+}
+
+.shopTab.active {
+    color: #ffd700;
+    border-bottom-color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.shopTab:active {
+    background: rgba(255, 215, 0, 0.15);
+}
+/* ===== SELL UI ===== */
+#sellContainer {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* ⭐ KHO ĐỒ 6 CỘT + SCROLL RIÊNG */
+#sellInventoryWrapper {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 100%;
+    padding-right: 4px;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+}
+
+#sellInventoryWrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+#sellInventoryWrapper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+#sellInventoryWrapper::-webkit-scrollbar-thumb {
+    background: rgba(255, 215, 0, 0.6);
+    border-radius: 3px;
+}
+
+#sellInventory {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);   /* ⭐ 6 CỘT */
+    gap: 4px;
+    width: 100%;
+}
+
+.sellSlot {
+    aspect-ratio: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    font-size: clamp(14px, 1.6vw, 20px);
+    transition: all 0.15s;
+    min-height: 35px;
+}
+
+.sellSlot.selected {
+    background: rgba(74, 222, 128, 0.3);
+    border-color: #4ade80;
+    box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}
+
+.sellSlot.selected::after {
+    content: '✅';
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    font-size: 12px;
+}
+
+.sellSlot.empty {
+    opacity: 0.2;
+    pointer-events: none;
+}
+
+.sellSlot .sellCount {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 10px;
+    color: #fff;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px #000;
+}
+
+/* ⭐ INFO BÊN PHẢI (CỐ ĐỊNH) */
+#sellInfo {
+    width: 120px;
+    flex-shrink: 0;              /* Không co lại */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    background: rgba(255, 215, 0, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    position: sticky;            /* Cố định khi cuộn */
+    top: 0;
+    align-self: flex-start;
+    max-height: 100%;
+}
+
+#sellTotal {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 13px;
+    text-align: center;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+#sellTotal .amount {
+    font-size: 18px;
+    display: block;
+    margin-top: 5px;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+#sellBtn {
+    padding: 10px;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+#sellBtn:active {
+    transform: scale(0.95);
+}
+
+#sellBtn:disabled {
+    background: #555;
+    color: #888;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+/* ===== HYPERCUBE 4D ===== */
+#hypercube {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    z-index: 15;
+    pointer-events: none;
+    transition: opacity 0.5s;
+}
+
+.cube4d {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: rotate4D 3s infinite linear;
+}
+
+.cube4d .face {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: rgba(168, 85, 247, 0.3);
+    border: 2px solid rgba(168, 85, 247, 0.8);
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+}
+
+.cube4d .front  { transform: translateZ(40px); }
+.cube4d .back   { transform: rotateY(180deg) translateZ(40px); }
+.cube4d .left   { transform: rotateY(-90deg) translateZ(40px); }
+.cube4d .right  { transform: rotateY(90deg) translateZ(40px); }
+.cube4d .top    { transform: rotateX(90deg) translateZ(40px); }
+.cube4d .bottom { transform: rotateX(-90deg) translateZ(40px); }
+
+@keyframes rotate4D {
+    0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+    100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+}
+
+#hypercube.pulse {
+    animation: cubePulse 1s infinite;
+}
+
+@keyframes cubePulse {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.2); filter: brightness(1.5); }
+}
+/* ⭐ HÀO QUANG 4D */
+#hypercube::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: -20px;
+    right: -20px;
+    bottom: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.3), transparent);
+    animation: glow4D 2s infinite;
+}
+
+@keyframes glow4D {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.3); opacity: 0.8; }
+}
+/* ============================================================
+   🟣 ORB DECADE - NÚT TƯƠNG TÁC
+   ============================================================ */
+
+#orbDecadeBtn {
+    position: fixed;
+    right: calc((100vw - 100vh * 5 / 3) / 4);
+    top: 52%;
+    transform: translate(50%, -50%);
+
+    width: clamp(80px, 9vw, 105px);
+    height: clamp(80px, 9vw, 105px);
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle at 35% 30%,
+            rgba(255,255,255,0.9),
+            rgba(190,80,255,0.8) 18%,
+            rgba(100,20,200,0.75) 55%,
+            rgba(50,0,100,0.65)
+        );
+
+    border: 3px solid rgba(230,190,255,0.95);
+
+    box-shadow:
+        0 0 20px rgba(170,60,255,0.8),
+        0 0 45px rgba(130,30,255,0.55);
+
+    z-index: 30;
+
+    pointer-events: auto;
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    animation: orbDecadePulse 1.4s infinite;
+}
+
+#orbDecadeBtn .btnIcon {
+    font-size: clamp(25px, 3vw, 36px);
+    line-height: 1;
+}
+
+#orbDecadeBtn .orbText {
+    margin-top: 5px;
+
+    color: #ffffff;
+
+    font-size: clamp(9px, 1.2vw, 13px);
+    font-weight: bold;
+
+    text-shadow:
+        0 2px 3px #000,
+        0 0 8px #d580ff;
+
+    white-space: nowrap;
+}
+
+#orbDecadeBtn:active {
+    transform: translate(50%, -50%) scale(0.88);
+}
+
+@keyframes orbDecadePulse {
+    0%, 100% {
+        box-shadow:
+            0 0 20px rgba(170,60,255,0.8),
+            0 0 45px rgba(130,30,255,0.55);
+    }
+
+    50% {
+        box-shadow:
+            0 0 30px rgba(220,120,255,1),
+            0 0 65px rgba(160,50,255,0.8);
+    }
+}
