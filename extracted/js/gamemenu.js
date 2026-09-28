@@ -7,6 +7,41 @@ console.log('🎮 Bắt đầu load gamemenu.js...');
 let isMenuOpen = true;
 let isLoggedIn = false;
 let userProfile = null;
+let currentSaveSlot = null;
+
+// ⭐ SAVE DATA KEYS
+const SAVE_KEYS = {
+    PROFILE: 'userProfile',
+    TOKEN: 'googleToken',
+    SAVE_PREFIX: 'gameSave_',
+    SLOT_COUNT: 3
+};
+
+// ⭐ DEFAULT SAVE STRUCTURE
+function getDefaultSaveData() {
+    return {
+        createdAt: Date.now(),
+        lastPlayed: Date.now(),
+        playTime: 0,
+        player: {
+            x: 2560, y: 1920,
+            hp: 200, maxHp: 200,
+            mp: 200, maxMp: 200,
+            coins: 0,
+            level: 1,
+            exp: 0,
+            expToNext: 100
+        },
+        inventory: [],
+        hotbar: [],
+        selectedSlot: 0,
+        currentMap: 1,
+        bossSpawned: false,
+        killCount: 0,
+        hypercubeInteracted: false,
+        map2Visited: false
+    };
+}
 
 // ⭐ KHỞI TẠO GOOGLE SIGN-IN
 function initGoogleSignIn() {
@@ -109,6 +144,161 @@ function parseJwt(token) {
         console.error('Parse JWT error:', e);
         return {};
     }
+}
+
+// ============================================================
+// SAVE SYSTEM - 3 SLOTS PER USER
+// ============================================================
+function getSaveKey(slotIndex) {
+    if (!userProfile || !userProfile.id) return null;
+    return SAVE_KEYS.SAVE_PREFIX + userProfile.id + '_' + slotIndex;
+}
+
+function loadSaveData(slotIndex) {
+    const key = getSaveKey(slotIndex);
+    if (!key) return getDefaultSaveData();
+    
+    const data = localStorage.getItem(key);
+    if (data) {
+        try {
+            const parsed = JSON.parse(data);
+            // Merge with defaults for new fields
+            return { ...getDefaultSaveData(), ...parsed };
+        } catch (e) {
+            console.error('Parse save data error:', e);
+        }
+    }
+    return getDefaultSaveData();
+}
+
+function saveSaveData(slotIndex, data) {
+    const key = getSaveKey(slotIndex);
+    if (!key) return false;
+    
+    const saveData = {
+        ...loadSaveData(slotIndex),
+        ...data,
+        lastPlayed: Date.now()
+    };
+    localStorage.setItem(key, JSON.stringify(saveData));
+    return true;
+}
+
+function getAllSaveSlots() {
+    const slots = [];
+    for (let i = 0; i < SAVE_KEYS.SLOT_COUNT; i++) {
+        const save = loadSaveData(i);
+        const isEmpty = save.createdAt === save.lastPlayed && save.player.level === 1 && save.player.coins === 0;
+        slots.push({
+            index: i,
+            isEmpty: isEmpty,
+            data: save
+        });
+    }
+    return slots;
+}
+
+function deleteSaveSlot(slotIndex) {
+    const key = getSaveKey(slotIndex);
+    if (!key) return false;
+    localStorage.removeItem(key);
+    return true;
+}
+
+// ============================================================
+// CHARACTER SELECTION SCREEN
+// ============================================================
+function renderCharacterSlots() {
+    const container = document.getElementById('characterSlots');
+    if (!container) return;
+    
+    const slots = getAllSaveSlots();
+    container.innerHTML = '';
+    
+    slots.forEach(slot => {
+        const slotEl = document.createElement('div');
+        slotEl.className = 'characterSlot' + (slot.isEmpty ? ' empty' : '');
+        slotEl.dataset.index = slot.index;
+        
+        const data = slot.data;
+        const player = data.player;
+        const lastPlayed = new Date(data.lastPlayed);
+        const lastPlayedStr = lastPlayed.toLocaleDateString('vi-VN') + ' ' + lastPlayed.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        
+        slotEl.innerHTML = `
+            <div class="slotNumber">${slot.index + 1}</div>
+            <div class="characterAvatar">${slot.isEmpty ? '+' : '🧙'}</div>
+            <div class="characterName">${slot.isEmpty ? 'Tạo mới' : (userProfile?.name || 'Player')}</div>
+            <div class="characterClass">${slot.isEmpty ? '' : 'Map ' + data.currentMap}</div>
+            <div class="characterLevel">${slot.isEmpty ? '' : 'Cấp ' + player.level}</div>
+            <div class="characterStats">
+                <div class="characterStat">
+                    <span class="characterStatLabel">HP</span>
+                    <span class="characterStatValue">${player.hp}/${player.maxHp}</span>
+                </div>
+                <div class="characterStat">
+                    <span class="characterStatLabel">Vàng</span>
+                    <span class="characterStatValue">${player.coins}</span>
+                </div>
+                <div class="characterStat">
+                    <span class="characterStatLabel">Lần chơi cuối</span>
+                    <span class="characterStatValue">${slot.isEmpty ? 'Chưa chơi' : lastPlayedStr}</span>
+                </div>
+            </div>
+            ${!slot.isEmpty ? `
+                <button class="deleteCharacterBtn" data-index="${slot.index}" onclick="event.stopPropagation(); deleteCharacterConfirm(${slot.index})">🗑️</button>
+            ` : ''}
+        `;
+        
+        slotEl.addEventListener('click', () => selectCharacterSlot(slot.index, slot.isEmpty));
+        container.appendChild(slotEl);
+    });
+}
+
+function selectCharacterSlot(slotIndex, isEmpty) {
+    currentSaveSlot = slotIndex;
+    
+    if (isEmpty) {
+        // New character - create fresh save
+        saveSaveData(slotIndex, getDefaultSaveData());
+    }
+    
+    // Load the save data into game
+    const saveData = loadSaveData(slotIndex);
+    applySaveData(saveData);
+    
+    // Close menu and start game
+    showCharacterSelect(false);
+    startGame();
+}
+
+function deleteCharacterConfirm(slotIndex) {
+    if (confirm('Xóa nhân vật slot ' + (slotIndex + 1) + '? Hành động này không thể hoàn tác!')) {
+        deleteSaveSlot(slotIndex);
+        renderCharacterSlots();
+    }
+}
+
+function showCharacterSelect(show) {
+    const mainMenu = document.getElementById('mainMenu');
+    const loggedIn = document.getElementById('menuLoggedIn');
+    const charSelect = document.getElementById('menuCharacterSelect');
+    
+    if (show) {
+        loggedIn.classList.add('hidden');
+        charSelect.classList.remove('hidden');
+        renderCharacterSlots();
+    } else {
+        charSelect.classList.add('hidden');
+        loggedIn.classList.remove('hidden');
+    }
+}
+
+function applySaveData(saveData) {
+    // Store save data globally for game to pick up
+    window.currentSaveData = saveData;
+    window.currentSaveSlot = currentSaveSlot;
+    console.log('📂 Loaded save slot:', currentSaveSlot, saveData);
 }
 
 // ⭐ HIỂN THỊ LỖI CẤU HÌNH GOOGLE
@@ -241,6 +431,7 @@ function initMenu() {
     const playBtn = document.getElementById('playBtn');
     const settingsBtn = document.getElementById('settingsBtn');
     const signOutBtn = document.getElementById('signOutBtn');
+    const backToMenuBtn = document.getElementById('backToMenuBtn');
 
     // Kiểm tra localStorage có user không
     const savedProfile = localStorage.getItem('userProfile');
@@ -263,15 +454,16 @@ function initMenu() {
     }
 
     // Event listeners
-    playBtn.addEventListener('click', startGame);
-    settingsBtn.addEventListener('click', openSettings);
+    playBtn.addEventListener('click', () => showCharacterSelect(true));
+    settingsBtn.addEventListener('click', openMenuSettings);
     signOutBtn.addEventListener('click', signOut);
+    backToMenuBtn.addEventListener('click', () => showCharacterSelect(false));
 
     // Khởi tạo Google Sign-In
     initGoogleSignIn();
 }
 
-// ⭐ BẮT ĐẦU GAME
+// ⭐ BẮT ĐẦU GAME (sau khi chọn slot)
 function startGame() {
     console.log('🎮 Bắt đầu game...');
     
@@ -283,20 +475,34 @@ function startGame() {
     gameContainer.classList.remove('menuHidden');
     isMenuOpen = false;
     
-    // Trigger game ready nếu chưa
-    if (typeof window._gameReady === 'undefined' || !window._gameReady) {
-        // Game chưa load xong, đợi
-        console.log('⏳ Đợi game load...');
-    }
+    // Load save data after game is ready
+    const tryLoadSave = () => {
+        if (typeof window._gameReady !== 'undefined' && window._gameReady) {
+            if (window.currentSaveData && typeof window.applySaveData === 'function') {
+                window.applySaveData(window.currentSaveData);
+                console.log('📂 Applied save data on game start');
+            }
+            
+            // Resize canvas
+            if (typeof resize === 'function') resize();
+        } else {
+            // Wait for game to be ready
+            setTimeout(tryLoadSave, 100);
+        }
+    };
     
-    // Resize canvas
-    if (typeof resize === 'function') resize();
+    tryLoadSave();
 }
 
-// ⭐ MỞ SETTINGS (placeholder)
-function openSettings() {
-    console.log('⚙️ Settings clicked - coming soon');
-    alert('Settings coming soon! 🛠️');
+// ⭐ MỞ SETTINGS TỪ MENU CHÍNH
+function openMenuSettings() {
+    console.log('⚙️ Settings clicked from main menu');
+    // Show the in-game settings panel
+    const settingsPanel = document.getElementById('settingsPanel');
+    if (settingsPanel) {
+        settingsPanel.classList.add('open');
+        document.body.classList.add('settings-open');
+    }
 }
 
 // ⭐ EXPORT GLOBAL
@@ -305,5 +511,8 @@ window.startGame = startGame;
 window.signOut = signOut;
 window.showLoggedInState = showLoggedInState;
 window.showLoggedOutState = showLoggedOutState;
+window.showCharacterSelect = showCharacterSelect;
+window.deleteCharacterConfirm = deleteCharacterConfirm;
+window.openMenuSettings = openMenuSettings;
 
 console.log('🎮 gamemenu.js sẵn sàng!');

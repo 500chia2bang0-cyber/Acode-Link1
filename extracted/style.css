@@ -1749,3 +1749,548 @@ body.smith-open #talkBtn {
 #gameContainer.menuHidden #fireJoystickArea {
     display: none !important;
 }
+
+/* ============================================================
+   CHARACTER SELECTION SCREEN
+   ============================================================ */
+.characterSlots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 480px;
+    margin-top: 16px;
+}
+
+.characterSlot {
+    position: relative;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 280px;
+}
+
+.characterSlot:hover {
+    border-color: rgba(170, 60, 255, 0.5);
+    background: rgba(170, 60, 255, 0.05);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(170, 60, 255, 0.2);
+}
+
+.characterSlot.empty {
+    border-style: dashed;
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.characterSlot.empty:hover {
+    border-color: rgba(74, 222, 128, 0.5);
+    background: rgba(74, 222, 128, 0.05);
+    box-shadow: 0 8px 30px rgba(74, 222, 128, 0.15);
+}
+
+.slotNumber {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #aa3cff, #7b2cbf);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(170, 60, 255, 0.5);
+}
+
+.characterAvatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #aa3cff 0%, #32b4ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: 700;
+    color: #fff;
+    box-shadow: 0 0 30px rgba(170, 60, 255, 0.4);
+    margin-top: 8px;
+}
+
+.characterSlot.empty .characterAvatar {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    font-size: 32px;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.characterName {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.characterSlot.empty .characterName {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.characterClass {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.characterLevel {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.characterSlot.empty .characterLevel {
+    display: none;
+}
+
+.characterStats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.characterStat {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 8px;
+}
+
+.characterStatLabel {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.characterStatValue {
+    color: #fff;
+    font-weight: 600;
+}
+
+.newCharacterBtn {
+    width: 100%;
+    margin-top: auto;
+    padding: 12px;
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 4px 15px rgba(74, 222, 128, 0.4);
+}
+
+.newCharacterBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 222, 128, 0.5);
+}
+
+.newCharacterBtn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.deleteCharacterBtn {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 60, 60, 0.2);
+    border: 1px solid rgba(255, 60, 60, 0.4);
+    color: #ff6666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.15s;
+    font-size: 14px;
+}
+
+.characterSlot:hover .deleteCharacterBtn {
+    opacity: 1;
+}
+
+.deleteCharacterBtn:hover {
+    background: rgba(255, 60, 60, 0.4);
+    transform: scale(1.1);
+}
+
+/* ============================================================
+   SETTINGS BUTTON (Top Right)
+   ============================================================ */
+.btnIconBtn {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(15, 15, 25, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    pointer-events: auto;
+    transition: all 0.15s;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.btnIconBtn:hover {
+    background: rgba(170, 60, 255, 0.2);
+    border-color: rgba(170, 60, 255, 0.4);
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(170, 60, 255, 0.2);
+}
+
+.btnIconBtn:active {
+    transform: scale(0.95);
+}
+
+.btnIconBtn .btnIcon {
+    font-size: 22px;
+    pointer-events: none;
+}
+
+/* ============================================================
+   SETTINGS PANEL
+   ============================================================ */
+#settingsPanel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: clamp(320px, 60vw, 480px);
+    max-height: 85vh;
+    background: rgba(15, 15, 25, 0.98);
+    border: 3px solid rgba(170, 60, 255, 0.8);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 60px rgba(170, 60, 255, 0.5);
+    display: none;
+    flex-direction: column;
+    z-index: 200;
+    pointer-events: auto;
+    overflow: hidden;
+}
+
+#settingsPanel.open {
+    display: flex;
+    animation: panelSlideIn 0.3s ease-out;
+}
+
+@keyframes panelSlideIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+#settingsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: rgba(170, 60, 255, 0.2);
+    color: #d580ff;
+    font-weight: bold;
+    font-size: clamp(16px, 1.8vw, 20px);
+    border-bottom: 2px solid rgba(170, 60, 255, 0.4);
+    flex-shrink: 0;
+}
+
+#settingsClose {
+    cursor: pointer;
+    font-size: clamp(22px, 2.8vw, 30px);
+    padding: 4px 14px;
+    border-radius: 8px;
+    background: rgba(255, 50, 50, 0.3);
+    color: #ff6666;
+    border: 2px solid rgba(255, 50, 50, 0.6);
+    transition: all 0.15s;
+    font-weight: bold;
+    pointer-events: auto;
+    line-height: 1;
+}
+
+#settingsClose:hover {
+    background: rgba(255, 50, 50, 0.5);
+    transform: scale(1.05);
+}
+
+#settingsClose:active {
+    transform: scale(0.95);
+}
+
+#settingsContent {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(170, 60, 255, 0.5) transparent;
+}
+
+#settingsContent::-webkit-scrollbar {
+    width: 6px;
+}
+
+#settingsContent::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#settingsContent::-webkit-scrollbar-thumb {
+    background: rgba(170, 60, 255, 0.5);
+    border-radius: 3px;
+}
+
+.settingGroup {
+    margin-bottom: 28px;
+}
+
+.settingGroup h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settingRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.settingRow:last-child {
+    border-bottom: none;
+}
+
+.settingRow > span:first-child {
+    font-size: 14px;
+    color: #fff;
+    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+}
+
+.sliderContainer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    max-width: 200px;
+}
+
+.sliderContainer input[type="range"] {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.sliderContainer input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #aa3cff, #d580ff);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(170, 60, 255, 0.6);
+    transition: transform 0.1s;
+}
+
+.sliderContainer input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.sliderContainer input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #aa3cff, #d580ff);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 10px rgba(170, 60, 255, 0.6);
+}
+
+.sliderBtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.sliderBtn:hover {
+    background: rgba(170, 60, 255, 0.3);
+    border-color: rgba(170, 60, 255, 0.5);
+}
+
+.sliderBtn:active {
+    transform: scale(0.95);
+}
+
+#zoomValue, #masterVolumeValue, #sfxVolumeValue, #musicVolumeValue {
+    font-size: 13px;
+    font-weight: 600;
+    color: #d580ff;
+    min-width: 45px;
+    text-align: right;
+}
+
+.toggleLabel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.toggleLabel input[type="checkbox"] {
+    display: none;
+}
+
+.toggleSlider {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.2s ease;
+}
+
+.toggleSlider::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.toggleLabel input[type="checkbox"]:checked + .toggleSlider {
+    background: linear-gradient(135deg, #aa3cff, #d580ff);
+    border-color: rgba(170, 60, 255, 0.5);
+}
+
+.toggleLabel input[type="checkbox"]:checked + .toggleSlider::after {
+    transform: translateX(24px);
+    box-shadow: 0 2px 6px rgba(170, 60, 255, 0.4);
+}
+
+.toggleLabel span:last-child {
+    font-size: 14px;
+    color: #fff;
+    font-weight: 500;
+}
+
+.btnSettings {
+    flex: 1;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+}
+
+.btnSettings:hover {
+    background: rgba(170, 60, 255, 0.2);
+    border-color: rgba(170, 60, 255, 0.4);
+}
+
+.btnSettings:active {
+    transform: scale(0.98);
+}
+
+.btnSettings.btnDanger {
+    background: rgba(255, 60, 60, 0.1);
+    border-color: rgba(255, 60, 60, 0.3);
+    color: #ff6666;
+}
+
+.btnSettings.btnDanger:hover {
+    background: rgba(255, 60, 60, 0.3);
+    border-color: rgba(255, 60, 60, 0.6);
+}
+
+/* Hide UI when settings open */
+body.settings-open #ui,
+body.settings-open #joystickArea,
+body.settings-open #fireJoystickArea,
+body.settings-open #inventoryBtn,
+body.settings-open #talkBtn,
+body.settings-open #orbDecadeBtn,
+body.settings-open #gameSettingsBtn {
+    pointer-events: none !important;
+    opacity: 0.3;
+}
+
+/* Character Selection responsive */
+@media (max-width: 500px) {
+    .characterSlots {
+        grid-template-columns: 1fr;
+    }
+}

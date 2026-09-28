@@ -3,6 +3,10 @@
 // ============================================================
 console.log('🎨 Bắt đầu load gamedrawcreate.js...');
 
+// ⭐ CAMERA ZOOM STATE
+window.cameraZoom = 1.0;
+window.smoothCameraEnabled = true;
+
 // ============================================================
 // CACHE ẢNH SCALED
 // ============================================================
@@ -21,6 +25,19 @@ function getScaledSprite(sprite, scale) {
     }
     return scaledWeaponCache[key];
 }
+
+// ============================================================
+// CAMERA ZOOM HANDLING
+// ============================================================
+window.updateCameraZoom = function(zoom) {
+    window.cameraZoom = Math.max(0.5, Math.min(2, zoom));
+    console.log('📷 Camera zoom:', window.cameraZoom);
+};
+
+window.applyCameraTransform = function() {
+    const zoom = window.cameraZoom || 1;
+    ctx.setTransform(devicePixelRatio * zoom, 0, 0, devicePixelRatio * zoom, 0, 0);
+};
 
 // ============================================================
 // VẼ SÚNG
@@ -98,14 +115,20 @@ window.drawGame = function() {
     if (typeof ctx === 'undefined') return;
     if (typeof W === 'undefined' || W === 0) return;
     
-    // Reset transform
-    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    // Apply camera zoom transform
+    if (typeof window.applyCameraTransform === 'function') {
+        window.applyCameraTransform();
+    } else {
+        // Fallback
+        ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    }
     
     // Screen effects
     if (typeof applyScreenEffects === 'function') applyScreenEffects();
     
-    // Clear
-    ctx.clearRect(0, 0, W, H);
+    // Clear (account for zoom)
+    const zoom = window.cameraZoom || 1;
+    ctx.clearRect(0, 0, W / zoom, H / zoom);
     
     // ⭐ MAP
     if (typeof drawMapBase === 'function') drawMapBase();
@@ -265,6 +288,201 @@ if (typeof drawDamageNumbers === 'function') {
 // 🌀 HIỆU ỨNG CHUYỂN MAP (vẽ trên cùng, đè lên mọi thứ)
 if (typeof drawMapTransition === 'function') drawMapTransition();
 };
+
+// ============================================================
+// SAVE / LOAD SYSTEM
+// ============================================================
+function collectGameState() {
+    if (typeof player === 'undefined') return null;
+    
+    return {
+        savedAt: Date.now(),
+        player: {
+            x: player.x,
+            y: player.y,
+            hp: player.hp,
+            maxHp: player.maxHp,
+            mp: player.mp,
+            maxMp: player.maxMp,
+            coins: player.coins,
+            level: player.level,
+            exp: player.exp,
+            expToNext: player.expToNext
+        },
+        inventory: inventory ? [...inventory] : [],
+        hotbar: inventory ? inventory.slice(0, 6) : [],
+        selectedSlot: selectedSlot || 0,
+        currentMap: currentMap || 1,
+        bossSpawned: bossSpawned || false,
+        killCount: killCount || 0,
+        hypercubeInteracted: hypercube ? hypercube.interacted : false,
+        map2Visited: currentMap === 2 || (typeof map2Visited !== 'undefined' && map2Visited)
+    };
+}
+
+window.saveGame = function() {
+    if (!window.currentSaveSlot && window.currentSaveSlot !== 0) {
+        console.warn('No save slot selected');
+        if (typeof showNotification === 'function') showNotification('❌ Chưa chọn slot lưu!');
+        return;
+    }
+    
+    const saveData = collectGameState();
+    if (!saveData) return;
+    
+    const key = 'gameSave_' + (userProfile?.id || 'local') + '_' + window.currentSaveSlot;
+    const fullSave = {
+        ...loadSaveData(window.currentSaveSlot),
+        ...saveData,
+        lastPlayed: Date.now()
+    };
+    
+    localStorage.setItem(key, JSON.stringify(fullSave));
+    console.log('💾 Game saved to slot', window.currentSaveSlot);
+    if (typeof showNotification === 'function') showNotification('💾 Đã lưu game!');
+};
+
+window.exportSave = function() {
+    const saveData = collectGameState();
+    if (!saveData) return;
+    
+    const exportData = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        user: userProfile ? { name: userProfile.name, email: userProfile.email } : { name: 'Local', email: '' },
+        saveSlot: window.currentSaveSlot,
+        data: saveData
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'game_save_' + Date.now() + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    if (typeof showNotification === 'function') showNotification('📤 Đã xuất save file!');
+};
+
+window.importSave = function(data) {
+    if (!data || !data.data) {
+        if (typeof showNotification === 'function') showNotification('❌ Dữ liệu save không hợp lệ!');
+        return;
+    }
+    
+    // Apply imported data
+    applySaveData(data.data);
+    
+    // Save to current slot
+    if (window.currentSaveSlot !== null && window.currentSaveSlot !== undefined) {
+        const key = 'gameSave_' + (userProfile?.id || 'local') + '_' + window.currentSaveSlot;
+        localStorage.setItem(key, JSON.stringify({
+            ...loadSaveData(window.currentSaveSlot),
+            ...data.data,
+            lastPlayed: Date.now()
+        }));
+    }
+    
+    if (typeof showNotification === 'function') showNotification('📥 Đã nhập save!');
+};
+
+window.resetGame = function() {
+    // Clear all save slots for current user
+    const userId = userProfile?.id || 'local';
+    for (let i = 0; i < 3; i++) {
+        localStorage.removeItem('gameSave_' + userId + '_' + i);
+    }
+    
+    // Reset game state
+    if (typeof player !== 'undefined') player.init();
+    if (typeof inventory !== 'undefined') {
+        inventory.fill(null);
+        if (typeof initInventoryUI === 'function') initInventoryUI();
+    }
+    
+    // Reset globals
+    window.currentSaveSlot = null;
+    window.currentSaveData = null;
+    
+    // Reload menu
+    location.reload();
+};
+
+// Helper to load save data (also used by gamemenu)
+function loadSaveData(slotIndex) {
+    const userId = userProfile?.id || 'local';
+    const key = 'gameSave_' + userId + '_' + slotIndex;
+    const data = localStorage.getItem(key);
+    
+    if (data) {
+        try {
+            return JSON.parse(data);
+        } catch (e) {
+            console.error('Parse save data error:', e);
+        }
+    }
+    return null;
+}
+
+window.loadGame = function(slotIndex) {
+    const saveData = loadSaveData(slotIndex);
+    if (saveData) {
+        applySaveData(saveData);
+        return true;
+    }
+    return false;
+};
+
+function applySaveData(saveData) {
+    if (!saveData) return;
+    
+    // Restore player state
+    if (typeof player !== 'undefined' && saveData.player) {
+        player.x = saveData.player.x;
+        player.y = saveData.player.y;
+        player.hp = saveData.player.hp;
+        player.maxHp = saveData.player.maxHp;
+        player.mp = saveData.player.mp;
+        player.maxMp = saveData.player.maxMp;
+        player.coins = saveData.player.coins;
+        player.level = saveData.player.level;
+        player.exp = saveData.player.exp;
+        player.expToNext = saveData.player.expToNext;
+        player.updateMaxStats();
+    }
+    
+    // Restore inventory
+    if (saveData.inventory && typeof inventory !== 'undefined') {
+        inventory.length = 0;
+        inventory.push(...saveData.inventory);
+        if (typeof initInventoryUI === 'function') initInventoryUI();
+    }
+    
+    // Restore selected slot
+    if (saveData.selectedSlot !== undefined) {
+        selectedSlot = saveData.selectedSlot;
+        if (typeof updateHotbarUI === 'function') updateHotbarUI();
+    }
+    
+    // Restore map
+    if (saveData.currentMap && typeof enterMap === 'function') {
+        enterMap(saveData.currentMap);
+    }
+    
+    // Restore boss state
+    if (saveData.bossSpawned !== undefined) bossSpawned = saveData.bossSpawned;
+    if (saveData.killCount !== undefined) killCount = saveData.killCount;
+    if (saveData.hypercubeInteracted !== undefined && typeof hypercube !== 'undefined') {
+        hypercube.interacted = saveData.hypercubeInteracted;
+    }
+    
+    if (typeof UI !== 'undefined') UI.update();
+    console.log('📂 Applied save data:', saveData);
+}
+
+// Make loadSaveData globally accessible for gamemenu
+window.loadSaveData = loadSaveData;
 
 // ============================================================
 // UPDATE GAME

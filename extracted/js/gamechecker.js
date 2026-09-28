@@ -458,13 +458,262 @@ window.addEventListener(
 
     }
 );
-// ============================================================
-// KHỞI TẠO
-// ============================================================
-initJoysticks();
 
-window.addEventListener('load', function() {
-    setTimeout(initScrollbar, 500);
-});
+// ============================================================
+// SETTINGS PANEL - CAMERA ZOOM & GAME SETTINGS
+// ============================================================
+let settingsOpen = false;
+
+function initSettingsPanel() {
+    const settingsBtn = document.getElementById('gameSettingsBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const settingsClose = document.getElementById('settingsClose');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const cameraZoomSlider = document.getElementById('cameraZoomSlider');
+    const zoomValue = document.getElementById('zoomValue');
+    const smoothCameraToggle = document.getElementById('smoothCameraToggle');
+    
+    // Master volume
+    const masterVolumeSlider = document.getElementById('masterVolumeSlider');
+    const masterVolumeValue = document.getElementById('masterVolumeValue');
+    const sfxVolumeSlider = document.getElementById('sfxVolumeSlider');
+    const sfxVolumeValue = document.getElementById('sfxVolumeValue');
+    const musicVolumeSlider = document.getElementById('musicVolumeSlider');
+    const musicVolumeValue = document.getElementById('musicVolumeValue');
+    
+    // Gameplay toggles
+    const autoAttackToggle = document.getElementById('autoAttackToggle');
+    const showDamageNumbersToggle = document.getElementById('showDamageNumbersToggle');
+    const showFloatingTextToggle = document.getElementById('showFloatingTextToggle');
+    
+    // Data buttons
+    const saveGameBtn = document.getElementById('saveGameBtn');
+    const exportSaveBtn = document.getElementById('exportSaveBtn');
+    const importSaveBtn = document.getElementById('importSaveBtn');
+    const importSaveFile = document.getElementById('importSaveFile');
+    const resetGameBtn = document.getElementById('resetGameBtn');
+
+    // Open settings from game screen button
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openSettingsPanel();
+        });
+    }
+
+    // Close settings
+    if (settingsClose) {
+        settingsClose.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeSettingsPanel();
+        });
+    }
+
+    // Camera zoom controls
+    if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            adjustCameraZoom(0.1);
+        });
+    }
+
+    if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            adjustCameraZoom(-0.1);
+        });
+    }
+
+    if (cameraZoomSlider) {
+        cameraZoomSlider.addEventListener('input', function() {
+            const zoom = parseFloat(this.value);
+            applyCameraZoom(zoom);
+            if (zoomValue) zoomValue.textContent = Math.round(zoom * 100) + '%';
+        });
+    }
+
+    if (smoothCameraToggle) {
+        smoothCameraToggle.addEventListener('change', function() {
+            window.smoothCameraEnabled = this.checked;
+        });
+    }
+
+    // Volume controls
+    if (masterVolumeSlider) {
+        masterVolumeSlider.addEventListener('input', function() {
+            const vol = parseFloat(this.value);
+            if (masterVolumeValue) masterVolumeValue.textContent = Math.round(vol * 100) + '%';
+            if (typeof window.setMasterVolume === 'function') window.setMasterVolume(vol);
+        });
+    }
+
+    if (sfxVolumeSlider) {
+        sfxVolumeSlider.addEventListener('input', function() {
+            const vol = parseFloat(this.value);
+            if (sfxVolumeValue) sfxVolumeValue.textContent = Math.round(vol * 100) + '%';
+            if (typeof window.setSfxVolume === 'function') window.setSfxVolume(vol);
+        });
+    }
+
+    if (musicVolumeSlider) {
+        musicVolumeSlider.addEventListener('input', function() {
+            const vol = parseFloat(this.value);
+            if (musicVolumeValue) musicVolumeValue.textContent = Math.round(vol * 100) + '%';
+            if (typeof window.setMusicVolume === 'function') window.setMusicVolume(vol);
+        });
+    }
+
+    // Gameplay toggles
+    if (autoAttackToggle) {
+        autoAttackToggle.addEventListener('change', function() {
+            window.autoAttackEnabled = this.checked;
+        });
+    }
+
+    if (showDamageNumbersToggle) {
+        showDamageNumbersToggle.addEventListener('change', function() {
+            window.showDamageNumbers = this.checked;
+        });
+    }
+
+    if (showFloatingTextToggle) {
+        showFloatingTextToggle.addEventListener('change', function() {
+            window.showFloatingText = this.checked;
+        });
+    }
+
+    // Data management
+    if (saveGameBtn) {
+        saveGameBtn.addEventListener('click', function() {
+            if (typeof window.saveGame === 'function') window.saveGame();
+        });
+    }
+
+    if (exportSaveBtn) {
+        exportSaveBtn.addEventListener('click', function() {
+            if (typeof window.exportSave === 'function') window.exportSave();
+        });
+    }
+
+    if (importSaveBtn) {
+        importSaveBtn.addEventListener('click', function() {
+            if (importSaveFile) importSaveFile.click();
+        });
+    }
+
+    if (importSaveFile) {
+        importSaveFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && typeof window.importSave === 'function') {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        window.importSave(data);
+                    } catch (err) {
+                        console.error('Import save error:', err);
+                        if (typeof showNotification === 'function') showNotification('❌ File save không hợp lệ!');
+                    }
+                };
+                reader.readAsText(file);
+            }
+            // Reset file input
+            this.value = '';
+        });
+    }
+
+    if (resetGameBtn) {
+        resetGameBtn.addEventListener('click', function() {
+            if (confirm('⚠️ CẢNH BÁO: Xóa toàn bộ dữ liệu game? Hành động này không thể hoàn tác!')) {
+                if (typeof window.resetGame === 'function') window.resetGame();
+            }
+        });
+    }
+
+    // Close on ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && settingsOpen) {
+            closeSettingsPanel();
+        }
+    });
+
+    console.log('⚙️ Settings panel initialized');
+}
+
+function openSettingsPanel() {
+    const settingsPanel = document.getElementById('settingsPanel');
+    if (settingsPanel) {
+        settingsPanel.classList.add('open');
+        document.body.classList.add('settings-open');
+        settingsOpen = true;
+        
+        // Update slider values from current state
+        updateSettingsUI();
+    }
+}
+
+function closeSettingsPanel() {
+    const settingsPanel = document.getElementById('settingsPanel');
+    if (settingsPanel) {
+        settingsPanel.classList.remove('open');
+        document.body.classList.remove('settings-open');
+        settingsOpen = false;
+    }
+}
+
+function updateSettingsUI() {
+    const cameraZoomSlider = document.getElementById('cameraZoomSlider');
+    const zoomValue = document.getElementById('zoomValue');
+    const smoothCameraToggle = document.getElementById('smoothCameraToggle');
+    
+    if (cameraZoomSlider && typeof window.cameraZoom !== 'undefined') {
+        cameraZoomSlider.value = window.cameraZoom;
+        if (zoomValue) zoomValue.textContent = Math.round(window.cameraZoom * 100) + '%';
+    }
+    
+    if (smoothCameraToggle && typeof window.smoothCameraEnabled !== 'undefined') {
+        smoothCameraToggle.checked = window.smoothCameraEnabled;
+    }
+}
+
+function adjustCameraZoom(delta) {
+    const cameraZoomSlider = document.getElementById('cameraZoomSlider');
+    const zoomValue = document.getElementById('zoomValue');
+    
+    if (cameraZoomSlider) {
+        const currentZoom = parseFloat(cameraZoomSlider.value);
+        const newZoom = Math.max(0.5, Math.min(2, currentZoom + delta));
+        cameraZoomSlider.value = newZoom;
+        applyCameraZoom(newZoom);
+        if (zoomValue) zoomValue.textContent = Math.round(newZoom * 100) + '%';
+    }
+}
+
+function applyCameraZoom(zoom) {
+    window.cameraZoom = zoom;
+    // Apply zoom to canvas rendering
+    if (typeof window.updateCameraZoom === 'function') {
+        window.updateCameraZoom(zoom);
+    }
+    // Also apply via CSS transform on canvas container if needed
+    const gameScreen = document.getElementById('gameScreen');
+    if (gameScreen) {
+        gameScreen.style.transform = `scale(${zoom})`;
+        gameScreen.style.transformOrigin = 'center center';
+    }
+}
+
+// Global functions for other modules to call
+window.openSettingsPanel = openSettingsPanel;
+window.closeSettingsPanel = closeSettingsPanel;
+window.applyCameraZoom = applyCameraZoom;
 
 console.log('🔍 gamechecker.js sẵn sàng!');
+
+// Initialize settings panel after DOM ready
+window.addEventListener('load', function() {
+    setTimeout(initSettingsPanel, 500);
+});

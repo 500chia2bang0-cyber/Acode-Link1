@@ -44,6 +44,20 @@
                         <button id="signOutBtn" class="btnGhost">🚪 ĐĂNG XUẤT</button>
                     </div>
                 </div>
+
+                <!-- Character Selection Screen -->
+                <div id="menuCharacterSelect" class="menuState hidden">
+                    <div class="menuHeader">
+                        <h2 class="menuTitle" style="font-size: clamp(24px, 4vw, 36px);">CHỌN NHÂN VẬT</h2>
+                        <p class="menuSubtitle">Chọn slot để bắt đầu cuộc phiêu lưu</p>
+                    </div>
+                    <div class="characterSlots" id="characterSlots">
+                        <!-- 3 slots sẽ được render bởi JS -->
+                    </div>
+                    <div class="menuButtons">
+                        <button id="backToMenuBtn" class="btnGhost">⬅️ QUAY LẠI</button>
+                    </div>
+                </div>
             </div>
             
             <div class="menuFooter">
@@ -59,6 +73,11 @@
             <div id="ui">
                 <div id="topBar">
     <div id="coins">🪙 <span id="coinCount">0</span></div>
+    
+    <!-- ⭐ SETTINGS BUTTON (góc phải) -->
+    <button id="gameSettingsBtn" class="btnIconBtn" title="Settings (ESC)">
+        <span class="btnIcon">⚙️</span>
+    </button>
     
     <!-- ⭐ UI LEVEL (bên trái HP) -->
     <div id="levelDisplay">
@@ -172,8 +191,98 @@
         <button id="smithForgeBtn">⚒️ RÈN</button>
     </div>
 </div>
+</div>
+      
+      <!-- ⭐ SETTINGS PANEL -->
+<div id="settingsPanel">
+    <div id="settingsHeader">
+        <span>⚙️ CÀI ĐẶT</span>
+        <div id="settingsClose">✕</div>
     </div>
-    
+    <div id="settingsContent">
+        <div class="settingGroup">
+            <h3>📷 CAMERA</h3>
+            <div class="settingRow">
+                <span>Zoom Camera</span>
+                <div class="sliderContainer">
+                    <button id="zoomOutBtn" class="sliderBtn">−</button>
+                    <input type="range" id="cameraZoomSlider" min="0.5" max="2" step="0.1" value="1">
+                    <button id="zoomInBtn" class="sliderBtn">+</button>
+                </div>
+                <span id="zoomValue">100%</span>
+            </div>
+            <div class="settingRow">
+                <label class="toggleLabel">
+                    <input type="checkbox" id="smoothCameraToggle" checked>
+                    <span class="toggleSlider"></span>
+                    <span>Smooth Camera Follow</span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="settingGroup">
+            <h3>🔊 ÂM THANH</h3>
+            <div class="settingRow">
+                <span>Master Volume</span>
+                <input type="range" id="masterVolumeSlider" min="0" max="1" step="0.1" value="0.7">
+                <span id="masterVolumeValue">70%</span>
+            </div>
+            <div class="settingRow">
+                <span>SFX Volume</span>
+                <input type="range" id="sfxVolumeSlider" min="0" max="1" step="0.1" value="0.8">
+                <span id="sfxVolumeValue">80%</span>
+            </div>
+            <div class="settingRow">
+                <span>Music Volume</span>
+                <input type="range" id="musicVolumeSlider" min="0" max="1" step="0.1" value="0.5">
+                <span id="musicVolumeValue">50%</span>
+            </div>
+        </div>
+        
+        <div class="settingGroup">
+            <h3>🎮 GAMEPLAY</h3>
+            <div class="settingRow">
+                <label class="toggleLabel">
+                    <input type="checkbox" id="autoAttackToggle" checked>
+                    <span class="toggleSlider"></span>
+                    <span>Auto Attack</span>
+                </label>
+            </div>
+            <div class="settingRow">
+                <label class="toggleLabel">
+                    <input type="checkbox" id="showDamageNumbersToggle" checked>
+                    <span class="toggleSlider"></span>
+                    <span>Show Damage Numbers</span>
+                </label>
+            </div>
+            <div class="settingRow">
+                <label class="toggleLabel">
+                    <input type="checkbox" id="showFloatingTextToggle" checked>
+                    <span class="toggleSlider"></span>
+                    <span>Show Floating Text</span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="settingGroup">
+            <h3>💾 DỮ LIỆU</h3>
+            <div class="settingRow">
+                <button id="saveGameBtn" class="btnSettings">💾 Lưu Game Ngay</button>
+            </div>
+            <div class="settingRow">
+                <button id="exportSaveBtn" class="btnSettings">📤 Xuất Save (JSON)</button>
+            </div>
+            <div class="settingRow">
+                <button id="importSaveBtn" class="btnSettings">📥 Nhập Save</button>
+                <input type="file" id="importSaveFile" accept=".json" style="display: none;">
+            </div>
+            <div class="settingRow">
+                <button id="resetGameBtn" class="btnSettings btnDanger">🗑️ Reset Toàn Bộ Dữ Liệu</button>
+            </div>
+        </div>
+    </div>
+</div>
+     
 <script src="js/game.js"></script>
 <script src="js/game2.js"></script>
 <script src="js/game3.js"></script>

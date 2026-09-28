@@ -537,6 +537,40 @@ window.addEventListener('load', function() {
         }
     }, 500);
 });
+
+// ============================================================
+// SETTINGS & VOLUME CONTROL
+// ============================================================
+window.masterVolume = 0.7;
+window.sfxVolume = 0.8;
+window.musicVolume = 0.5;
+window.autoAttackEnabled = true;
+window.showDamageNumbers = true;
+window.showFloatingText = true;
+
+window.setMasterVolume = function(vol) {
+    window.masterVolume = Math.max(0, Math.min(1, vol));
+    console.log('🔊 Master volume:', window.masterVolume);
+};
+
+window.setSfxVolume = function(vol) {
+    window.sfxVolume = Math.max(0, Math.min(1, vol));
+    console.log('🔊 SFX volume:', window.sfxVolume);
+};
+
+window.setMusicVolume = function(vol) {
+    window.musicVolume = Math.max(0, Math.min(1, vol));
+    console.log('🔊 Music volume:', window.musicVolume);
+};
+
+// Auto-save every 30 seconds
+setInterval(function() {
+    if (window.currentSaveSlot !== null && window.currentSaveSlot !== undefined && typeof window.saveGame === 'function') {
+        window.saveGame();
+        console.log('💾 Auto-saved');
+    }
+}, 30000);
+
 // ============================================================
 // 🎞️ GIF DECODER - GIẢI MÃ FILE GIF THÀNH CÁC FRAME
 // ============================================================
