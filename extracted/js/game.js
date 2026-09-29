@@ -563,13 +563,24 @@ window.setMusicVolume = function(vol) {
     console.log('🔊 Music volume:', window.musicVolume);
 };
 
-// Auto-save every 30 seconds
+// Auto-save every 30 seconds (local only)
 setInterval(function() {
     if (window.currentSaveSlot !== null && window.currentSaveSlot !== undefined && typeof window.saveGame === 'function') {
         window.saveGame();
         console.log('💾 Auto-saved');
     }
 }, 30000);
+
+// Auto-sync to n8n every 2 minutes (less frequent to avoid spam)
+setInterval(function() {
+    if (window.currentSaveSlot !== null && window.currentSaveSlot !== undefined && typeof window.syncToN8n === 'function') {
+        const saveData = typeof window.collectGameState === 'function' ? window.collectGameState() : null;
+        if (saveData) {
+            window.syncToN8n(saveData, 'auto_sync');
+            console.log('📡 Auto-synced to n8n');
+        }
+    }
+}, 120000);
 
 // ============================================================
 // 🎞️ GIF DECODER - GIẢI MÃ FILE GIF THÀNH CÁC FRAME

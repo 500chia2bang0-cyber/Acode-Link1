@@ -290,8 +290,85 @@ if (typeof drawMapTransition === 'function') drawMapTransition();
 };
 
 // ============================================================
-// SAVE / LOAD SYSTEM
+// N8N WEBHOOK SYNC
 // ============================================================
+const N8N_WEBHOOK_URL = 'https://your-n8n-instance.com/webhook/save-game'; // ⚠️ THAY BẰNG URL N8N THỰC
+
+async function syncToN8n(saveData, action = 'save') {
+    if (!userProfile || !userProfile.id) {
+        console.log('📡 N8N: Chưa đăng nhập Google, bỏ qua sync');
+        return;
+    }
+    
+    const payload = {
+        action: action,
+        timestamp: Date.now(),
+        user: {
+            id: userProfile.id,
+            email: userProfile.email,
+            name: userProfile.name,
+            picture: userProfile.picture
+        },
+        saveSlot: window.currentSaveSlot,
+        character: {
+            name: userProfile.name,
+            level: saveData.player?.level || 1,
+            exp: saveData.player?.exp || 0,
+            hp: saveData.player?.hp || 200,
+            maxHp: saveData.player?.maxHp || 200,
+            mp: saveData.player?.mp || 200,
+            maxMp: saveData.player?.maxMp || 200,
+            coins: saveData.player?.coins || 0,
+            currentMap: saveData.currentMap || 1
+        },
+        stats: {
+            playTime: (saveData.lastPlayed || Date.now()) - (saveData.createdAt || Date.now()),
+            killCount: saveData.killCount || 0,
+            bossSpawned: saveData.bossSpawned || false,
+            hypercubeInteracted: saveData.hypercubeInteracted || false,
+            map2Visited: saveData.map2Visited || false
+        },
+        inventory: saveData.inventory?.map(item => item ? {
+            id: item.id,
+            name: item.name,
+            count: item.count || 1,
+            level: item.weaponLevel || 0,
+            damage: item.damage || 0
+        } : null).filter(Boolean) || [],
+        hotbar: saveData.hotbar?.map(item => item ? {
+            id: item.id,
+            name: item.name,
+            count: item.count || 1,
+            level: item.weaponLevel || 0,
+            damage: item.damage || 0
+        } : null).filter(Boolean) || []
+    };
+    
+    try {
+        const response = await fetch(N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+            console.log('📡 N8N: Sync thành công', action);
+            if (typeof showNotification === 'function' && action === 'save') {
+                showNotification('☁️ Đã đồng bộ lên server!');
+            }
+        } else {
+            console.warn('📡 N8N: Sync thất bại', response.status, response.statusText);
+        }
+    } catch (error) {
+        console.error('📡 N8N: Lỗi kết nối', error);
+    }
+}
+
+// Make it globally accessible for manual trigger
+window.syncToN8n = syncToN8n;
+window.collectGameState = collectGameState;
 function collectGameState() {
     if (typeof player === 'undefined') return null;
     
@@ -340,6 +417,11 @@ window.saveGame = function() {
     localStorage.setItem(key, JSON.stringify(fullSave));
     console.log('💾 Game saved to slot', window.currentSaveSlot);
     if (typeof showNotification === 'function') showNotification('💾 Đã lưu game!');
+    
+    // Sync to n8n
+    if (typeof syncToN8n === 'function') {
+        syncToN8n(fullSave, 'save');
+    }
 };
 
 window.exportSave = function() {
