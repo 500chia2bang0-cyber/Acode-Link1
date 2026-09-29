@@ -1,0 +1,324 @@
+{
+  "name": "Game Save Sync to Airtable",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "save-game",
+        "responseMode": "onReceived",
+        "responseCode": 200,
+        "responseData": "{\"success\": true}",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "save-game"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "userId",
+              "value": "={{ $json.user.id }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.user.email }}"
+            },
+            {
+              "name": "name",
+              "value": "={{ $json.user.name }}"
+            },
+            {
+              "name": "avatarUrl",
+              "value": "={{ $json.user.picture }}"
+            },
+            {
+              "name": "action",
+              "value": "={{ $json.action }}"
+            }
+          ],
+          "number": [
+            {
+              "name": "saveSlot",
+              "value": "={{ $json.saveSlot }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}"
+            },
+            {
+              "name": "level",
+              "value": "={{ $json.character.level }}"
+            },
+            {
+              "name": "exp",
+              "value": "={{ $json.character.exp }}"
+            },
+            {
+              "name": "hp",
+              "value": "={{ $json.character.hp }}"
+            },
+            {
+              "name": "maxHp",
+              "value": "={{ $json.character.maxHp }}"
+            },
+            {
+              "name": "mp",
+              "value": "={{ $json.character.mp }}"
+            },
+            {
+              "name": "maxMp",
+              "value": "={{ $json.character.maxMp }}"
+            },
+            {
+              "name": "coins",
+              "value": "={{ $json.character.coins }}"
+            },
+            {
+              "name": "currentMap",
+              "value": "={{ $json.character.currentMap }}"
+            },
+            {
+              "name": "playTime",
+              "value": "={{ $json.stats.playTime }}"
+            },
+            {
+              "name": "killCount",
+              "value": "={{ $json.stats.killCount }}"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "bossSpawned",
+              "value": "={{ $json.stats.bossSpawned }}"
+            },
+            {
+              "name": "hypercubeInteracted",
+              "value": "={{ $json.stats.hypercubeInteracted }}"
+            },
+            {
+              "name": "map2Visited",
+              "value": "={{ $json.stats.map2Visited }}"
+            }
+          ],
+          "json": [
+            {
+              "name": "inventoryJson",
+              "value": "={{ JSON.stringify($json.inventory || []) }}"
+            },
+            {
+              "name": "hotbarJson",
+              "value": "={{ JSON.stringify($json.hotbar || []) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2",
+      "name": "Prepare Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "baseId": "={{ $credentials.airtableBaseId }}",
+        "table": "Characters",
+        "keyField": "User ID",
+        "keyValue": "={{ $json.userId + '_' + $json.saveSlot }}",
+        "fields": {
+          "User ID": "={{ $json.userId + '_' + $json.saveSlot }}",
+          "Email": "={{ $json.email }}",
+          "Name": "={{ $json.name }}",
+          "Avatar URL": "={{ $json.avatarUrl }}",
+          "Save Slot": "={{ $json.saveSlot }}",
+          "Character Name": "={{ $json.name }}",
+          "Level": "={{ $json.level }}",
+          "EXP": "={{ $json.exp }}",
+          "HP": "={{ $json.hp }}",
+          "Max HP": "={{ $json.maxHp }}",
+          "MP": "={{ $json.mp }}",
+          "Max MP": "={{ $json.maxMp }}",
+          "Coins": "={{ $json.coins }}",
+          "Current Map": "={{ $json.currentMap }}",
+          "Play Time (ms)": "={{ $json.playTime }}",
+          "Kill Count": "={{ $json.killCount }}",
+          "Boss Spawned": "={{ $json.bossSpawned }}",
+          "Hypercube Interacted": "={{ $json.hypercubeInteracted }}",
+          "Map 2 Visited": "={{ $json.map2Visited }}",
+          "Last Sync": "={{ new Date($json.timestamp).toISOString() }}"
+        },
+        "options": {}
+      },
+      "id": "3",
+      "name": "Upsert Character",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [690, 200],
+      "credentials": {
+        "airtable": "Airtable Account"
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "operation": "in",
+              "value2": "save,auto_sync"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4",
+      "name": "IF: Save Action?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [690, 400]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Prepare Inventory Items for batch upsert\nconst items = [];\nconst userId = $json.userId;\nconst saveSlot = $json.saveSlot;\nconst charKey = userId + '_' + saveSlot;\nconst timestamp = $json.timestamp;\n\n// Parse inventory JSON\nlet inventory = [];\nlet hotbar = [];\ntry {\n  inventory = JSON.parse($json.inventoryJson || '[]');\n} catch (e) {}\ntry {\n  hotbar = JSON.parse($json.hotbarJson || '[]');\n} catch (e) {}\n\n// Inventory items\ninventory.forEach((item, idx) => {\n  if (item && item.id) {\n    items.push({\n      json: {\n        'Item ID': `${item.id}_slot${idx}_${userId}`,\n        'Character': [charKey],\n        'Item Name': item.name || item.id,\n        'Item Type': item.type || 'material',\n        'Rarity': item.rarity || 'common',\n        'Count': item.count || 1,\n        'Weapon Level': item.level || 0,\n        'Damage': item.damage || 0,\n        'Slot Type': 'inventory',\n        'Slot Index': idx,\n        'Synced At': new Date(timestamp).toISOString()\n      }\n    });\n  }\n});\n\n// Hotbar items\nhotbar.forEach((item, idx) => {\n  if (item && item.id) {\n    items.push({\n      json: {\n        'Item ID': `${item.id}_hotbar${idx}_${userId}`,\n        'Character': [charKey],\n        'Item Name': item.name || item.id,\n        'Item Type': item.type || 'weapon',\n        'Rarity': item.rarity || 'common',\n        'Count': item.count || 1,\n        'Weapon Level': item.level || 0,\n        'Damage': item.damage || 0,\n        'Slot Type': 'hotbar',\n        'Slot Index': idx,\n        'Synced At': new Date(timestamp).toISOString()\n      }\n    });\n  }\n});\n\nreturn items;"
+      },
+      "id": "5",
+      "name": "Prepare Inventory Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "baseId": "={{ $credentials.airtableBaseId }}",
+        "table": "Inventory Items",
+        "keyField": "Item ID",
+        "fields": {
+          "Item ID": "={{ $json['Item ID'] }}",
+          "Character": "={{ $json.Character }}",
+          "Item Name": "={{ $json['Item Name'] }}",
+          "Item Type": "={{ $json['Item Type'] }}",
+          "Rarity": "={{ $json.Rarity }}",
+          "Count": "={{ $json.Count }}",
+          "Weapon Level": "={{ $json['Weapon Level'] }}",
+          "Damage": "={{ $json.Damage }}",
+          "Slot Type": "={{ $json['Slot Type'] }}",
+          "Slot Index": "={{ $json['Slot Index'] }}",
+          "Synced At": "={{ $json['Synced At'] }}"
+        },
+        "options": {
+          "batchSize": 50
+        }
+      },
+      "id": "6",
+      "name": "Batch Upsert Inventory",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [1130, 300],
+      "credentials": {
+        "airtable": "Airtable Account"
+      }
+    },
+    {
+      "parameters": {
+        "responseCode": 200,
+        "responseData": "{\"success\": true, \"message\": \"Synced to Airtable\"}",
+        "options": {}
+      },
+      "id": "7",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1350, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Data": {
+      "main": [
+        [
+          {
+            "node": "Upsert Character",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Character": {
+      "main": [
+        [
+          {
+            "node": "IF: Save Action?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Save Action?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Inventory Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Inventory Items": {
+      "main": [
+        [
+          {
+            "node": "Batch Upsert Inventory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch Upsert Inventory": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "game-save-sync"
+}
