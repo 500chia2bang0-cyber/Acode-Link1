@@ -11,11 +11,11 @@
 ### 1.2 Table: `Characters` (Lưu thông tin nhân vật chính)
 | Field Name | Type | Options |
 |------------|------|---------|
-| `User ID` | Single line text | Primary field, unique |
+| `User ID` | Single line text | Primary field, unique (format: `googleId_slotIndex`) |
 | `Email` | Email | |
 | `Name` | Single line text | |
 | `Avatar URL` | URL | |
-| `Save Slot` | Number | Integer |
+| `Save Slot` | Number | Integer (0,1,2) |
 | `Character Name` | Single line text | |
 | `Level` | Number | Integer |
 | `EXP` | Number | Integer |
@@ -24,12 +24,9 @@
 | `MP` | Number | Integer |
 | `Max MP` | Number | Integer |
 | `Coins` | Number | Integer |
-| `Current Map` | Number | Integer (1 hoặc 2) |
+| `Current Map` | Number | Integer (1-8) |
 | `Play Time (ms)` | Number | Integer |
 | `Kill Count` | Number | Integer |
-| `Boss Spawned` | Checkbox | |
-| `Hypercube Interacted` | Checkbox | |
-| `Map 2 Visited` | Checkbox | |
 | `Last Sync` | Date time | ISO format |
 | `Created At` | Created time | Auto |
 

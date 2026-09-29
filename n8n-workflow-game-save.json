@@ -150,9 +150,6 @@
           "Current Map": "={{ $json.currentMap }}",
           "Play Time (ms)": "={{ $json.playTime }}",
           "Kill Count": "={{ $json.killCount }}",
-          "Boss Spawned": "={{ $json.bossSpawned }}",
-          "Hypercube Interacted": "={{ $json.hypercubeInteracted }}",
-          "Map 2 Visited": "={{ $json.map2Visited }}",
           "Last Sync": "={{ new Date($json.timestamp).toISOString() }}"
         },
         "options": {}

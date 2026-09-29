@@ -323,10 +323,7 @@ async function syncToN8n(saveData, action = 'save') {
         },
         stats: {
             playTime: (saveData.lastPlayed || Date.now()) - (saveData.createdAt || Date.now()),
-            killCount: saveData.killCount || 0,
-            bossSpawned: saveData.bossSpawned || false,
-            hypercubeInteracted: saveData.hypercubeInteracted || false,
-            map2Visited: saveData.map2Visited || false
+            killCount: saveData.killCount || 0
         },
         inventory: saveData.inventory?.map(item => item ? {
             id: item.id,
@@ -390,10 +387,7 @@ function collectGameState() {
         hotbar: inventory ? inventory.slice(0, 6) : [],
         selectedSlot: selectedSlot || 0,
         currentMap: currentMap || 1,
-        bossSpawned: bossSpawned || false,
-        killCount: killCount || 0,
-        hypercubeInteracted: hypercube ? hypercube.interacted : false,
-        map2Visited: currentMap === 2 || (typeof map2Visited !== 'undefined' && map2Visited)
+        killCount: killCount || 0
     };
 }
 
@@ -552,12 +546,8 @@ function applySaveData(saveData) {
         enterMap(saveData.currentMap);
     }
     
-    // Restore boss state
-    if (saveData.bossSpawned !== undefined) bossSpawned = saveData.bossSpawned;
+    // Restore kill count
     if (saveData.killCount !== undefined) killCount = saveData.killCount;
-    if (saveData.hypercubeInteracted !== undefined && typeof hypercube !== 'undefined') {
-        hypercube.interacted = saveData.hypercubeInteracted;
-    }
     
     if (typeof UI !== 'undefined') UI.update();
     console.log('📂 Applied save data:', saveData);
