@@ -6,7 +6,7 @@
 ### 1.1 Tạo Base mới
 1. Vào https://airtable.com → **Add a base** → **Start from scratch**
 2. Đặt tên: `Game Save Data`
-3. Tạo 2 tables:
+3. Tạo **3 tables**:
 
 ### 1.2 Table: `Characters` (Lưu thông tin nhân vật chính)
 | Field Name | Type | Options |
@@ -45,6 +45,17 @@
 | `Slot Index` | Number | Integer |
 | `Synced At` | Date time | ISO format |
 
+### 1.4 Table: `Map State` (Trạng thái map - shared multiplayer)
+| Field Name | Type | Options |
+|------------|------|---------|
+| `Map ID` | Number | Primary field, unique (1=Thảo Nguyên, 2=Sa Mạc) |
+| `Map Name` | Single line text | |
+| `Boss Spawned` | Checkbox | |
+| `Hypercube Interacted` | Checkbox | (Chỉ map 1) |
+| `Map 2 Visited` | Checkbox | |
+| `Last Updated` | Date time | ISO format |
+| `Updated By` | Single line text | Format: `userId_slotIndex` |
+
 ---
 
 ## 2. Lấy API Key & Base ID
@@ -58,7 +69,7 @@
 2. **Base ID**: Mở base Airtable → URL: `https://airtable.com/appXXXXXXXXXXXXXX/...`
    - Base ID = `appXXXXXXXXXXXXXX`
 
-3. **Table Names**: `Characters`, `Inventory Items` (phải khớp chính xác)
+3. **Table Names**: `Characters`, `Inventory Items`, `Map State` (phải khớp chính xác)
 
 ---
 
@@ -79,6 +90,9 @@ services:
       - N8N_PROTOCOL=https
       - WEBHOOK_URL=https://your-domain.com/
       - GENERIC_TIMEZONE=Asia/Ho_Chi_Minh
+      # CORS config cho game client (localhost:8080, hoặc domain production)
+      - N8N_CORS_ORIGIN=*
+      # Hoặc restrict domains: - N8N_CORS_ORIGIN=http://localhost:8080,https://your-game-domain.com
     volumes:
       - n8n_data:/home/node/.n8n
     restart: unless-stopped
@@ -88,6 +102,8 @@ volumes:
 ```
 
 Chạy: `docker-compose up -d`
+
+**Lưu ý CORS**: Nếu game chạy trên `localhost:8080` (hoặc port khác) và n8n trên `localhost:5678`, browser sẽ block request do CORS. Set `N8N_CORS_ORIGIN=*` để cho phép tất cả, hoặc chỉ định domain cụ thể.
 
 ### 3.2 Truy cập n8n
 - Mở: `https://your-domain.com:5678`
@@ -108,6 +124,7 @@ Copy file `n8n-workflow-game-save.json` (xem dưới) → Import trong n8n.
 - **Response Mode**: On Received
 - **Response Code**: 200
 - **Response Data**: `{"success": true}`
+- **Options → Allowed Origins**: `*` (hoặc domain game cụ thể: `http://localhost:8080`)
 
 #### Node 2: **Set** (Parse & Validate) - Tên: `Prepare Data`
 ```javascript
@@ -287,7 +304,7 @@ const N8N_WEBHOOK_URL = 'https://your-n8n-domain.com/webhook/save-game';
 | `404 Not Found` | Base ID/Table name sai | Check chính xác Base ID, Table name |
 | `422 Unprocessable` | Field type mismatch | Check field types khớp (Number vs String) |
 | `Link record not found` | Character record chưa tạo | Upsert Character trước, mới sync Inventory |
-| `CORS Error` | Game chạy localhost, n8n domain khác | Config n8n `N8N_CORS_ORIGIN=*` hoặc proxy |
+| `CORS Error` | Game chạy localhost, n8n domain khác | 1. Docker: set `N8N_CORS_ORIGIN=*`<br>2. n8n Webhook node: Options → Allowed Origins = `*`<br>3. Hoặc dùng nginx proxy cùng domain |
 
 ### Debug n8n:
 1. Mở **Executions** tab
@@ -299,6 +316,8 @@ const N8N_WEBHOOK_URL = 'https://your-n8n-domain.com/webhook/save-game';
 ## 9. Workflow JSON Export (Import nhanh)
 
 File: `n8n-workflow-game-save.json` - Import vào n8n → Workflows → Import
+
+**Lưu ý**: File này đã được cập nhật hỗ trợ multiplayer với bảng `Map State` riêng biệt (trạng thái boss, hypercube, map2 visited được chia sẻ giữa các player trên cùng map).
 
 ---
 

@@ -1,0 +1,158 @@
+{
+  "name": "Game Save to Airtable",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "save-game",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "webhookId": "save-game"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const input = $input.first().json;\n\nreturn [{\n  json: {\n    userId: input.user?.id || 'unknown',\n    email: input.user?.email || '',\n    name: input.user?.name || 'Player',\n    avatarUrl: input.user?.picture || '',\n    action: input.action || 'save',\n    saveSlot: input.saveSlot ?? 0,\n    timestamp: input.timestamp || Date.now(),\n    level: input.character?.level ?? 1,\n    exp: input.character?.exp ?? 0,\n    hp: input.character?.hp ?? 200,\n    maxHp: input.character?.maxHp ?? 200,\n    mp: input.character?.mp ?? 200,\n    maxMp: input.character?.maxMp ?? 200,\n    coins: input.character?.coins ?? 0,\n    currentMap: input.character?.currentMap ?? 1,\n    playTime: input.stats?.playTime ?? 0,\n    killCount: input.stats?.killCount ?? 0,\n    inventoryJson: JSON.stringify(input.inventory || []),\n    hotbarJson: JSON.stringify(input.hotbar || [])\n  }\n}];"
+      },
+      "id": "code-prepare",
+      "name": "Prepare Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "baseId": "YOUR_BASE_ID_HERE",
+        "table": "Characters",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "User ID": "={{ $json.userId + '_' + $json.saveSlot }}",
+            "Email": "={{ $json.email }}",
+            "Name": "={{ $json.name }}",
+            "Avatar URL": "={{ $json.avatarUrl }}",
+            "Save Slot": "={{ $json.saveSlot }}",
+            "Character Name": "={{ $json.name }}",
+            "Level": "={{ $json.level }}",
+            "EXP": "={{ $json.exp }}",
+            "HP": "={{ $json.hp }}",
+            "Max HP": "={{ $json.maxHp }}",
+            "MP": "={{ $json.mp }}",
+            "Max MP": "={{ $json.maxMp }}",
+            "Coins": "={{ $json.coins }}",
+            "Current Map": "={{ $json.currentMap }}",
+            "Play Time (ms)": "={{ $json.playTime }}",
+            "Kill Count": "={{ $json.killCount }}",
+            "Last Sync": "={{ new Date($json.timestamp).toISOString() }}"
+          },
+          "matchingColumns": ["User ID"],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "airtable-character",
+      "name": "Upsert Character",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [700, 300],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "1",
+          "name": "Airtable Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const prep = $('Prepare Data').first().json;\n\nlet inventory = [];\nlet hotbar = [];\n\ntry { inventory = JSON.parse(prep.inventoryJson || '[]'); } catch (e) {}\ntry { hotbar = JSON.parse(prep.hotbarJson || '[]'); } catch (e) {}\n\nconst userKey = prep.userId + '_' + prep.saveSlot;\nconst items = [];\n\ninventory.forEach((item, idx) => {\n  if (item && item.id) {\n    items.push({\n      json: {\n        itemId: userKey + '_inv' + idx + '_' + item.id,\n        userId: userKey,\n        itemName: item.name || item.id,\n        itemType: item.type || 'material',\n        rarity: item.rarity || 'common',\n        count: item.count || 1,\n        weaponLevel: item.weaponLevel || 0,\n        damage: item.damage || 0,\n        slotType: 'inventory',\n        slotIndex: idx,\n        syncedAt: new Date(prep.timestamp).toISOString()\n      }\n    });\n  }\n});\n\nhotbar.forEach((item, idx) => {\n  if (item && item.id) {\n    items.push({\n      json: {\n        itemId: userKey + '_hot' + idx + '_' + item.id,\n        userId: userKey,\n        itemName: item.name || item.id,\n        itemType: item.type || 'weapon',\n        rarity: item.rarity || 'common',\n        count: item.count || 1,\n        weaponLevel: item.weaponLevel || 0,\n        damage: item.damage || 0,\n        slotType: 'hotbar',\n        slotIndex: idx,\n        syncedAt: new Date(prep.timestamp).toISOString()\n      }\n    });\n  }\n});\n\nreturn items;"
+      },
+      "id": "code-prepare-inv",
+      "name": "Prepare Inventory Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "baseId": "YOUR_BASE_ID_HERE",
+        "table": "Inventory Items",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Item ID": "={{ $json.itemId }}",
+            "User ID": "={{ $json.userId }}",
+            "Item Name": "={{ $json.itemName }}",
+            "Item Type": "={{ $json.itemType }}",
+            "Rarity": "={{ $json.rarity }}",
+            "Count": "={{ $json.count }}",
+            "Weapon Level": "={{ $json.weaponLevel }}",
+            "Damage": "={{ $json.damage }}",
+            "Slot Type": "={{ $json.slotType }}",
+            "Slot Index": "={{ $json.slotIndex }}",
+            "Synced At": "={{ $json.syncedAt }}"
+          },
+          "matchingColumns": ["Item ID"],
+          "schema": []
+        },
+        "options": {
+          "batchSize": 50
+        }
+      },
+      "id": "airtable-inv",
+      "name": "Batch Upsert Inventory",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [1220, 300],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "1",
+          "name": "Airtable Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Saved\", \"userId\": $('Prepare Data').first().json.userId } }}",
+        "options": {}
+      },
+      "id": "response-node",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1480, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{"node": "Prepare Data", "type": "main", "index": 0}]]
+    },
+    "Prepare Data": {
+      "main": [[{"node": "Upsert Character", "type": "main", "index": 0}]]
+    },
+    "Upsert Character": {
+      "main": [[{"node": "Prepare Inventory Items", "type": "main", "index": 0}]]
+    },
+    "Prepare Inventory Items": {
+      "main": [[{"node": "Batch Upsert Inventory", "type": "main", "index": 0}]]
+    },
+    "Batch Upsert Inventory": {
+      "main": [[{"node": "Success Response", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
