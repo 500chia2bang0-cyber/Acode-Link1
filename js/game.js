@@ -10,6 +10,8 @@ window._gameReady = false;
 
 // Canvas initialization with safety check
 let canvas, ctx, W, H;
+let _lastH = 0, _lastW = 0;
+
 function initCanvas() {
     canvas = document.getElementById('gameCanvas');
     if (!canvas) {
@@ -18,11 +20,49 @@ function initCanvas() {
         return;
     }
     ctx = canvas.getContext('2d', { alpha: false });
+    if (!ctx) {
+        console.error('❌ Failed to get canvas context! Retrying...');
+        setTimeout(initCanvas, 50);
+        return;
+    }
     ctx.imageSmoothingEnabled = false;
     ctx.mozImageSmoothingEnabled = false;
     ctx.webkitImageSmoothingEnabled = false;
     ctx.msImageSmoothingEnabled = false;
+    
+    console.log('✅ Canvas initialized:', canvas.width, 'x', canvas.height);
+    
+    // Initialize after canvas is ready
+    initGame();
+}
+
+function initGame() {
     resize();
+    
+    // Resize listener
+    let resizeTimer = null;
+    window.addEventListener('resize', function() {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resize, 300);
+    });
+    
+    window.addEventListener('orientationchange', function() {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resize, 500);
+    });
+    
+    // Start game loop
+    loop();
+    
+    // Show hypercube on load
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            if (typeof hypercube !== 'undefined') {
+                const el = document.getElementById('hypercube');
+                if (el && hypercubeActive) el.style.display = 'block';
+            }
+        }, 500);
+    });
 }
 
 // Initialize canvas when DOM is ready
@@ -35,8 +75,6 @@ if (document.readyState === 'loading') {
 // ============================================================
 // RESIZE (CHỈ SET 1 LẦN)
 // ============================================================
-let _lastH = 0
-let _lastW = 0
 function resize() {
     // ⭐ DÙNG WINDOW SIZE THAY VÌ PARENT
     const newW = window.innerWidth;
@@ -527,30 +565,6 @@ function drawSlashTrails(c, px, py) {
         c.restore();
     }
 };
-
-resize();
-// ⭐ CHỈ 1 EVENT LISTENER
-let resizeTimer = null;
-window.addEventListener('resize', function() {
-    if (resizeTimer) clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(resize, 300);
-});
-
-window.addEventListener('orientationchange', function() {
-    if (resizeTimer) clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(resize, 500);
-});
-
-loop();
-// ⭐ HIỆN KHỐI 4D BAN ĐẦU
-window.addEventListener('load', function() {
-    setTimeout(function() {
-        if (typeof hypercube !== 'undefined') {
-            const el = document.getElementById('hypercube');
-            if (el && hypercubeActive) el.style.display = 'block';
-        }
-    }, 500);
-});
 
 // ============================================================
 // SETTINGS & VOLUME CONTROL

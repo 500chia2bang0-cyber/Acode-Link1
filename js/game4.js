@@ -371,7 +371,13 @@ function initInventory() {
     if (btn) {
         const newBtn = btn.cloneNode(true);
         btn.parentNode.replaceChild(newBtn, btn);
-        newBtn.addEventListener('click', toggleInventory);
+        function handleInventoryToggle(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleInventory();
+        }
+        newBtn.addEventListener('click', handleInventoryToggle);
+        newBtn.addEventListener('touchstart', handleInventoryToggle, { passive: false });
     }
     
     // ⭐ HOTBAR - XÓA EVENT CŨ + GẮN MỚI
@@ -382,14 +388,22 @@ function initInventory() {
     });
     
     document.querySelectorAll('#hotbar .slot').forEach(function(el) {
-        el.addEventListener('touchstart', function(e) {
+        function handleSlotSelect(e) {
             e.preventDefault();
             e.stopPropagation();
-            const slot = parseInt(this.dataset.slot);
-            selectedSlot = slot;
-            updateHotbarUI();
-            console.log('🎯 Hotbar slot', slot);
-        }, { passive: false });
+            const slot = parseInt(el.dataset.slot);
+            if (!isNaN(slot)) {
+                selectedSlot = slot;
+                updateHotbarUI();
+                console.log('🎯 Hotbar slot', slot);
+            }
+        }
+        
+        // Touch events (mobile)
+        el.addEventListener('touchstart', handleSlotSelect, { passive: false });
+        
+        // Mouse events (desktop testing)
+        el.addEventListener('mousedown', handleSlotSelect);
     });
     
     console.log('✅ Kho đồ sẵn sàng!');

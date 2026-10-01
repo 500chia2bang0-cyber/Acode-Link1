@@ -112,29 +112,34 @@ function drawWeapon(c, px, py) {
 // VẼ GAME
 // ============================================================
 window.drawGame = function() {
-    if (typeof ctx === 'undefined') return;
-    if (typeof W === 'undefined' || W === 0) return;
+    try {
+        if (typeof ctx === 'undefined') return;
+        if (typeof W === 'undefined' || W === 0) return;
+        
+        // Apply camera zoom transform
+        if (typeof window.applyCameraTransform === 'function') {
+            window.applyCameraTransform();
+        } else {
+            // Fallback
+            ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+        }
+        
+        // Screen effects
+        if (typeof applyScreenEffects === 'function') applyScreenEffects();
+        
+        // Clear (account for zoom)
+        const zoom = window.cameraZoom || 1;
+        ctx.clearRect(0, 0, W / zoom, H / zoom);
+        
+        // ⭐ MAP
+        if (typeof drawMapBase === 'function') drawMapBase();
     
-    // Apply camera zoom transform
-    if (typeof window.applyCameraTransform === 'function') {
-        window.applyCameraTransform();
-    } else {
-        // Fallback
-        ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+        // 🌀 CỔNG DỊCH CHUYỂN (map 2)
+        if (typeof drawMapPortal === 'function') drawMapPortal();
+    } catch (e) {
+        console.error('❌ drawGame error:', e);
     }
-    
-    // Screen effects
-    if (typeof applyScreenEffects === 'function') applyScreenEffects();
-    
-    // Clear (account for zoom)
-    const zoom = window.cameraZoom || 1;
-    ctx.clearRect(0, 0, W / zoom, H / zoom);
-    
-    // ⭐ MAP
-    if (typeof drawMapBase === 'function') drawMapBase();
-
-    // 🌀 CỔNG DỊCH CHUYỂN (map 2)
-    if (typeof drawMapPortal === 'function') drawMapPortal();
+};
 // ============================================================
 // 🟣 VẼ ORB DECADE
 // ============================================================
@@ -501,27 +506,39 @@ window.loadSaveData = loadSaveData;
 // UPDATE GAME
 // ============================================================
 window.updateGame = function() {
-    if (typeof moveJoy === 'undefined') return;
-    if (typeof player === 'undefined') return;
-    if (typeof Camera === 'undefined') return;
-    if (typeof MAP === 'undefined') return;
-    
-    // ⭐ Đóng băng di chuyển khi đang chuyển map
-    const frozen = (typeof MapTransition !== 'undefined') && MapTransition.active;
-
-    // Di chuyển
-    const dir = frozen ? { x: 0, y: 0 } : moveJoy.getDir();
-    if (dir.x !== 0 || dir.y !== 0) {
-        const nx = player.x + dir.x * player.speed;
-        const ny = player.y + dir.y * player.speed;
-        const half = player.size / 2;
+    try {
+        if (typeof moveJoy === 'undefined') return;
+        if (typeof player === 'undefined') return;
+        if (typeof Camera === 'undefined') return;
+        if (typeof MAP === 'undefined') return;
         
-        if (MAP.isWalkable(nx + half, player.y - half) &&
-            MAP.isWalkable(nx + half, player.y + half) &&
-            MAP.isWalkable(nx - half, player.y - half) &&
-            MAP.isWalkable(nx - half, player.y + half)) {
-            player.x = nx;
+        // ⭐ Đóng băng di chuyển khi đang chuyển map
+        const frozen = (typeof MapTransition !== 'undefined') && MapTransition.active;
+
+        // Di chuyển
+        const dir = frozen ? { x: 0, y: 0 } : moveJoy.getDir();
+        if (dir.x !== 0 || dir.y !== 0) {
+            const nx = player.x + dir.x * player.speed;
+            const ny = player.y + dir.y * player.speed;
+            const half = player.size / 2;
+            
+            if (MAP.isWalkable(nx + half, player.y - half) &&
+                MAP.isWalkable(nx + half, player.y + half) &&
+                MAP.isWalkable(nx - half, player.y - half) &&
+                MAP.isWalkable(nx - half, player.y + half)) {
+                player.x = nx;
+            }
+            if (MAP.isWalkable(player.x + half, ny - half) &&
+                MAP.isWalkable(player.x + half, ny + half) &&
+                MAP.isWalkable(player.x - half, ny - half) &&
+                MAP.isWalkable(player.x - half, ny + half)) {
+                player.y = ny;
+            }
         }
+    } catch (e) {
+        console.error('❌ updateGame error:', e);
+    }
+};
         if (MAP.isWalkable(player.x + half, ny - half) &&
             MAP.isWalkable(player.x + half, ny + half) &&
             MAP.isWalkable(player.x - half, ny - half) &&
