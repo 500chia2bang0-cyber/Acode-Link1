@@ -31,7 +31,18 @@ function initJoysticks() {
     
     console.log('✅ Gắn event joystick');
     
-    // MOVE JOY
+    // Auto-attach if not already attached
+    if (initJoysticks._attached) return;
+    initJoysticks._attached = true;
+
+    // Helper to get clientX/clientY from touch or mouse event
+    function getClientPos(e) {
+        if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        if (e.changedTouches && e.changedTouches.length > 0) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+        return { x: e.clientX, y: e.clientY };
+    }
+
+    // MOVE JOY - Touch events
     moveJoy.area.addEventListener('touchstart', function(e) {
         e.preventDefault();
         if (moveJoy.pointerId !== null) return;
@@ -75,10 +86,33 @@ function initJoysticks() {
             }
         }
     });
+
+    // MOVE JOY - Mouse events (for desktop testing)
+    moveJoy.area.addEventListener('mousedown', function(e) {
+        if (moveJoy.pointerId !== null) return;
+        moveJoy.pointerId = 'mouse';
+        moveJoy.active = true;
+        moveJoy.setPos(e.clientX, e.clientY);
+    });
     
+    window.addEventListener('mousemove', function(e) {
+        if (!moveJoy.active || moveJoy.pointerId !== 'mouse') return;
+        moveJoy.setPos(e.clientX, e.clientY);
+    });
+    
+    window.addEventListener('mouseup', function(e) {
+        if (!moveJoy.active || moveJoy.pointerId !== 'mouse') return;
+        moveJoy.active = false;
+        moveJoy.pointerId = null;
+        moveJoy.dirX = 0;
+        moveJoy.dirY = 0;
+        moveJoy.el.style.transform = 'translate(-50%, -50%)';
+    });
+
     // FIRE JOY
     fireJoy._hasFired = false;
     
+    // FIRE JOY - Touch events
     fireJoy.area.addEventListener('touchstart', function(e) {
         e.preventDefault();
         if (fireJoy.pointerId !== null) return;
@@ -122,7 +156,33 @@ function initJoysticks() {
             }
         }
     });
+
+    // FIRE JOY - Mouse events (for desktop testing)
+    fireJoy.area.addEventListener('mousedown', function(e) {
+        if (fireJoy.pointerId !== null) return;
+        if (moveJoy.pointerId === 'mouse') return;
+        fireJoy.pointerId = 'mouse';
+        fireJoy.active = true;
+        fireJoy._hasFired = false;
+        fireJoy.setPos(e.clientX, e.clientY);
+        GAME_STATE.aimLine.active = false;
+    });
     
+    window.addEventListener('mousemove', function(e) {
+        if (!fireJoy.active || fireJoy.pointerId !== 'mouse') return;
+        fireJoy.setPos(e.clientX, e.clientY);
+        const mode = checkCurrentFireMode();
+        if (mode === 'sniper') {
+            GAME_STATE.aimLine.active = true;
+            GAME_STATE.aimLine.angle = fireJoy.angle;
+        }
+    });
+    
+    window.addEventListener('mouseup', function(e) {
+        if (!fireJoy.active || fireJoy.pointerId !== 'mouse') return;
+        handleFireJoyRelease();
+    });
+
     console.log('✅ Gắn event joystick xong!');
 }
 
@@ -713,7 +773,8 @@ window.applyCameraZoom = applyCameraZoom;
 
 console.log('🔍 gamechecker.js sẵn sàng!');
 
-// Initialize settings panel after DOM ready
+// Initialize settings panel AND joysticks after DOM ready
 window.addEventListener('load', function() {
     setTimeout(initSettingsPanel, 500);
+    setTimeout(initJoysticks, 100);
 });
