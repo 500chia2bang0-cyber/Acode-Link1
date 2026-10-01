@@ -207,6 +207,9 @@ const SaveSystem = (function() {
         const saveData = loadSaveData(slotIndex);
         _currentSaveData = saveData;
         _currentSaveSlot = slotIndex;
+        // Also set globals for backward compatibility with gamedrawcreate.js
+        window.currentSaveData = saveData;
+        window.currentSaveSlot = slotIndex;
         console.log('📂 Prepared save slot:', slotIndex);
         return saveData;
     }

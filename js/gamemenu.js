@@ -165,7 +165,7 @@ function selectCharacterSlot(slotIndex, isEmpty) {
     currentSaveSlot = slotIndex;
     
     if (isEmpty) {
-        SaveSystem.saveSaveData(slotIndex, SaveSystem.getDefaultSaveData ? SaveSystem.getDefaultSaveData() : getDefaultSaveData());
+        SaveSystem.saveSaveData(slotIndex, SaveSystem.getDefaultSaveData());
     }
     
     const saveData = SaveSystem.loadSaveData(slotIndex);

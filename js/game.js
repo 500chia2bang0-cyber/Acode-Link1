@@ -8,15 +8,29 @@ let hypercubeActive = true;   // Khối 4D có hiện không
 // ⭐ FLAG: Chờ gamedrawcreate.js load xong
 window._gameReady = false;
 
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d', { alpha: false });
+// Canvas initialization with safety check
+let canvas, ctx, W, H;
+function initCanvas() {
+    canvas = document.getElementById('gameCanvas');
+    if (!canvas) {
+        console.error('❌ Canvas not found! Retrying...');
+        setTimeout(initCanvas, 50);
+        return;
+    }
+    ctx = canvas.getContext('2d', { alpha: false });
+    ctx.imageSmoothingEnabled = false;
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.webkitImageSmoothingEnabled = false;
+    ctx.msImageSmoothingEnabled = false;
+    resize();
+}
 
-ctx.imageSmoothingEnabled = false;
-ctx.mozImageSmoothingEnabled = false;
-ctx.webkitImageSmoothingEnabled = false;
-ctx.msImageSmoothingEnabled = false;
-
-let W = 0, H = 0;
+// Initialize canvas when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCanvas);
+} else {
+    initCanvas();
+}
 
 // ============================================================
 // RESIZE (CHỈ SET 1 LẦN)
