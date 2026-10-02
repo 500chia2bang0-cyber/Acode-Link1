@@ -370,7 +370,13 @@ function initInventory() {
     }
     
     initInventoryUI();
+    attachInventoryEventListeners();
     
+    console.log('✅ Kho đồ sẵn sàng!');
+}
+
+// ⭐ TÁCH RIÊNG GẮN EVENT LISTENERS - DÙNG LẠI SAU KHI LOAD SAVE
+function attachInventoryEventListeners() {
     // Nút kho
     const btn = document.getElementById('inventoryBtn');
     if (btn) {
@@ -410,9 +416,10 @@ function initInventory() {
         // Mouse events (desktop testing)
         el.addEventListener('mousedown', handleSlotSelect);
     });
-    
-    console.log('✅ Kho đồ sẵn sàng!');
 }
+
+// Export để gọi từ gamedrawcreate.js sau khi load save
+window.attachInventoryEventListeners = attachInventoryEventListeners;
 
 window.addEventListener('load', function() {
     setTimeout(initInventory, 300);

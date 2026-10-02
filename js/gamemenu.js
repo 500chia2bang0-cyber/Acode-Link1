@@ -332,6 +332,11 @@ function startGame() {
                 console.log('📂 Applied save data on game start');
             }
             if (typeof resize === 'function') resize();
+            
+            // ⭐ KHỞI TẠO UI GAME (settings, orb, inventory events)
+            if (typeof window.initGameUI === 'function') {
+                setTimeout(window.initGameUI, 100);
+            }
         } else {
             setTimeout(tryLoadSave, 100);
         }

@@ -90,13 +90,13 @@ function drawWeapon(c, px, py) {
     c.fill();
     c.stroke();
     
-    // ⭐ VẼ VŨ KHÍ (LẬT THEO JOYSTICK, KHÔNG THEO TAY)
+    // ⭐ VẼ VŨ KHÍ - Kiểm tra sprite đã load chưa
     if (sprite && sprite.complete && sprite.naturalWidth > 0) {
         const cached = getScaledSprite(sprite, scale);
         
         // ⭐ KHÓA LẬT THEO FIREJOY (không theo Hand)
-        let lockAngle = hand.angle;
-        if (typeof fireJoy !== 'undefined' && fireJoy.active) {
+        let lockAngle = (hand && typeof hand.angle === 'number') ? hand.angle : 0;
+        if (typeof fireJoy !== 'undefined' && fireJoy.active && typeof fireJoy.angle === 'number') {
             lockAngle = fireJoy.angle;
         }
         
@@ -105,12 +105,16 @@ function drawWeapon(c, px, py) {
         c.save();
         if (shouldFlip) {
             c.scale(1, -1);
-            c.rotate(-hand.angle);
+            c.rotate(-lockAngle);
         } else {
-            c.rotate(hand.angle);
+            c.rotate(lockAngle);
         }
         c.drawImage(cached, 12, -cached.height / 2);
         c.restore();
+    } else {
+        // Fallback: vẽ hình chữ nhật nếu sprite chưa load
+        c.fillStyle = '#666';
+        c.fillRect(12, -8, 24, 16);
     }
     
     c.restore();
@@ -585,6 +589,37 @@ window.updateGame = function() {
     if (typeof updateMapSystems === 'function') updateMapSystems();
 };
 
+// ============================================================
+// ⭐ KHỞI TẠO UI GAME - Gọi khi game bắt đầu
+// ============================================================
+function initGameUI() {
+    console.log('🎮 Khởi tạo Game UI...');
+    
+    // Initialize settings panel
+    if (typeof initSettingsPanel === 'function') {
+        initSettingsPanel();
+    }
+    
+    // Initialize orb decade button
+    if (typeof initOrbDecadeButton === 'function') {
+        initOrbDecadeButton();
+    }
+    
+    // Attach inventory event listeners
+    if (typeof attachInventoryEventListeners === 'function') {
+        attachInventoryEventListeners();
+    }
+    
+    // Initialize inventory UI if not done
+    if (typeof initInventoryUI === 'function') {
+        initInventoryUI();
+    }
+    
+    console.log('✅ Game UI khởi tạo xong');
+}
+
+// Export để gọi từ gamemenu.js startGame()
+window.initGameUI = initGameUI;
 
 // ============================================================
 // ⭐ BÁO GAME READY
