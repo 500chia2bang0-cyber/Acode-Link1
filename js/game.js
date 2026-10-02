@@ -38,6 +38,12 @@ function initCanvas() {
 
 function initGame() {
     resize();
+    initJoysticks();  // ⭐ Khởi tạo joystick sau khi DOM ready
+    
+    // Gắn event listeners cho joystick
+    if (typeof attachJoystickEvents === 'function') {
+        attachJoystickEvents();
+    }
     
     // Resize listener
     let resizeTimer = null;
@@ -164,72 +170,83 @@ const player = {
 };
 
 // ============================================================
-// JOYSTICK
+// JOYSTICK - Khởi tạo sau khi DOM ready
 // ============================================================
-const moveJoy = {
-    el: document.getElementById('joystickKnob'),
-    base: document.getElementById('joystickBase'),
-    area: document.getElementById('joystickArea'),
-    active: false, pointerId: null,
-    dirX: 0, dirY: 0, maxDist: 40,
-    
-    setPos: function(cx, cy) {
-        const rect = this.base.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        let dx = cx - centerX, dy = cy - centerY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > this.maxDist) {
-            dx = (dx / dist) * this.maxDist;
-            dy = (dy / dist) * this.maxDist;
-        }
-        this.el.style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
-        this.dirX = dx / this.maxDist;
-        this.dirY = dy / this.maxDist;
-    },
-    
-    getDir: function() {
-        if (!this.active) return { x: 0, y: 0 };
-        return { x: this.dirX, y: this.dirY };
-    }
-};
+let moveJoy = null;
+let fireJoy = null;
 
-const fireJoy = {
-    el: document.getElementById('fireJoystickKnob'),
-    base: document.getElementById('fireJoystickBase'),
-    indicator: document.getElementById('directionIndicator'),
-    area: document.getElementById('fireJoystickArea'),
-    active: false, pointerId: null,
-    angle: 0, maxDist: 40,
-    fireRate: 8, counter: 0,
-    
-    setPos: function(cx, cy) {
-        const rect = this.base.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        let dx = cx - centerX, dy = cy - centerY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > this.maxDist) {
-            dx = (dx / dist) * this.maxDist;
-            dy = (dy / dist) * this.maxDist;
+function initJoysticks() {
+    moveJoy = {
+        el: document.getElementById('joystickKnob'),
+        base: document.getElementById('joystickBase'),
+        area: document.getElementById('joystickArea'),
+        active: false, pointerId: null,
+        dirX: 0, dirY: 0, maxDist: 40,
+        
+        setPos: function(cx, cy) {
+            if (!this.base) return;
+            const rect = this.base.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            let dx = cx - centerX, dy = cy - centerY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > this.maxDist) {
+                dx = (dx / dist) * this.maxDist;
+                dy = (dy / dist) * this.maxDist;
+            }
+            if (this.el) this.el.style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
+            this.dirX = dx / this.maxDist;
+            this.dirY = dy / this.maxDist;
+        },
+        
+        getDir: function() {
+            if (!this.active) return { x: 0, y: 0 };
+            return { x: this.dirX, y: this.dirY };
         }
-        this.el.style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
-        this.angle = Math.atan2(dy, dx);
-        if (dist > 5) {
-            this.indicator.classList.add('active');
-            const deg = this.angle * (180 / Math.PI) + 90;
-            this.indicator.style.transform = 'translate(-50%, -50%) rotate(' + deg + 'deg)';
-        } else {
-            this.indicator.classList.remove('active');
-        }
-    },
+    };
     
-    getAngle: function() {
-        if (!this.active) return null;
-        const step = (2 * Math.PI) / 64;
-        return Math.round(this.angle / step) * step;
-    }
-};
+    fireJoy = {
+        el: document.getElementById('fireJoystickKnob'),
+        base: document.getElementById('fireJoystickBase'),
+        indicator: document.getElementById('directionIndicator'),
+        area: document.getElementById('fireJoystickArea'),
+        active: false, pointerId: null,
+        angle: 0, maxDist: 40,
+        fireRate: 8, counter: 0,
+        
+        setPos: function(cx, cy) {
+            if (!this.base) return;
+            const rect = this.base.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            let dx = cx - centerX, dy = cy - centerY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > this.maxDist) {
+                dx = (dx / dist) * this.maxDist;
+                dy = (dy / dist) * this.maxDist;
+            }
+            if (this.el) this.el.style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
+            this.angle = Math.atan2(dy, dx);
+            if (dist > 5) {
+                if (this.indicator) {
+                    this.indicator.classList.add('active');
+                    const deg = this.angle * (180 / Math.PI) + 90;
+                    this.indicator.style.transform = 'translate(-50%, -50%) rotate(' + deg + 'deg)';
+                }
+            } else {
+                if (this.indicator) this.indicator.classList.remove('active');
+            }
+        },
+        
+        getAngle: function() {
+            if (!this.active) return null;
+            const step = (2 * Math.PI) / 64;
+            return Math.round(this.angle / step) * step;
+        }
+    };
+    
+    console.log('✅ Joystick objects created');
+}
 
 // ============================================================
 // ĐẠN

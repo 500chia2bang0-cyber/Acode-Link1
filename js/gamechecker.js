@@ -21,19 +21,25 @@ function checkCurrentFireMode() {
 }
 
 // ============================================================
-// JOYSTICK EVENTS
+// JOYSTICK EVENTS - Gắn event listeners vào joystick
 // ============================================================
-function initJoysticks() {
-    if (typeof moveJoy === 'undefined' || typeof fireJoy === 'undefined') {
-        setTimeout(initJoysticks, 100);
+function attachJoystickEvents() {
+    if (!moveJoy || !fireJoy) {
+        console.warn('⚠️ Joystick objects not ready, retrying...');
+        setTimeout(attachJoystickEvents, 100);
+        return;
+    }
+    if (!moveJoy.area || !fireJoy.area) {
+        console.warn('⚠️ Joystick DOM elements not ready, retrying...');
+        setTimeout(attachJoystickEvents, 100);
         return;
     }
     
     console.log('✅ Gắn event joystick');
     
     // Auto-attach if not already attached
-    if (initJoysticks._attached) return;
-    initJoysticks._attached = true;
+    if (attachJoystickEvents._attached) return;
+    attachJoystickEvents._attached = true;
 
     // Helper to get clientX/clientY from touch or mouse event
     function getClientPos(e) {
@@ -70,7 +76,7 @@ function initJoysticks() {
                 moveJoy.pointerId = null;
                 moveJoy.dirX = 0;
                 moveJoy.dirY = 0;
-                moveJoy.el.style.transform = 'translate(-50%, -50%)';
+                if (moveJoy.el) moveJoy.el.style.transform = 'translate(-50%, -50%)';
             }
         }
     }, { passive: false });
@@ -82,7 +88,7 @@ function initJoysticks() {
                 moveJoy.pointerId = null;
                 moveJoy.dirX = 0;
                 moveJoy.dirY = 0;
-                moveJoy.el.style.transform = 'translate(-50%, -50%)';
+                if (moveJoy.el) moveJoy.el.style.transform = 'translate(-50%, -50%)';
             }
         }
     });
@@ -106,7 +112,7 @@ function initJoysticks() {
         moveJoy.pointerId = null;
         moveJoy.dirX = 0;
         moveJoy.dirY = 0;
-        moveJoy.el.style.transform = 'translate(-50%, -50%)';
+        if (moveJoy.el) moveJoy.el.style.transform = 'translate(-50%, -50%)';
     });
 
     // FIRE JOY
@@ -185,6 +191,9 @@ function initJoysticks() {
 
     console.log('✅ Gắn event joystick xong!');
 }
+
+// Export for game.js to call
+window.attachJoystickEvents = attachJoystickEvents;
 
 // ============================================================
 // XỬ LÝ THẢ
@@ -773,8 +782,7 @@ window.applyCameraZoom = applyCameraZoom;
 
 console.log('🔍 gamechecker.js sẵn sàng!');
 
-// Initialize settings panel AND joysticks after DOM ready
+// Initialize settings panel after DOM ready
 window.addEventListener('load', function() {
     setTimeout(initSettingsPanel, 500);
-    setTimeout(initJoysticks, 100);
 });
