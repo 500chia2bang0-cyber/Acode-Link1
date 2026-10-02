@@ -136,98 +136,96 @@ window.drawGame = function() {
     
         // 🌀 CỔNG DỊCH CHUYỂN (map 2)
         if (typeof drawMapPortal === 'function') drawMapPortal();
+        
+        // 🟣 VẼ ORB DECADE (chỉ map 1)
+        if (
+            typeof orbDecadeActive !== 'undefined' &&
+            orbDecadeActive &&
+            currentMap === 1 &&
+            typeof ORB_DECADE !== 'undefined' &&
+            typeof Camera !== 'undefined' &&
+            typeof ctx !== 'undefined'
+        ) {
+            const s = Camera.toScreen(ORB_DECADE.x, ORB_DECADE.y);
+            const pulse = Math.sin(Date.now() * 0.005) * 5;
+            ctx.save();
+            const glow = ctx.createRadialGradient(s.x, s.y, 5, s.x, s.y, 65 + pulse);
+            glow.addColorStop(0, 'rgba(255,255,255,0.9)');
+            glow.addColorStop(0.25, 'rgba(190,80,255,0.65)');
+            glow.addColorStop(0.65, 'rgba(120,30,255,0.25)');
+            glow.addColorStop(1, 'rgba(100,0,180,0)');
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, 65 + pulse, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#8b2cff';
+            ctx.strokeStyle = '#f0c8ff';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, ORB_DECADE.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(s.x - 9, s.y - 10, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+         
+        // Đạn
+        if (typeof drawBullets === 'function') drawBullets();
+        
+        // NPC
+        if (typeof drawNPCs === 'function') drawNPCs();
+        
+        // Nhân vật
+        if (typeof player !== 'undefined' && typeof Camera !== 'undefined') {
+            const ox = player.x, oy = player.y;
+            player.x -= Camera.x;
+            player.y -= Camera.y;
+            player.draw(ctx);
+            player.x = ox;
+            player.y = oy;
+            
+            // ⭐ GỌI RIÊNG SAU KHI PHỤC HỒI
+            if (typeof drawWeapon === 'function') {
+                try { drawWeapon(ctx); } catch(e) {}
+            }
+        }
+        
+        // Quái
+        if (typeof drawMonsters === 'function') drawMonsters();
+        
+        // Boss
+        if (typeof drawBoss === 'function') drawBoss();
+        if (typeof drawBossBullets === 'function') drawBossBullets();
+        
+        // Items
+        if (typeof drawDroppedItems === 'function') drawDroppedItems();
+        if (typeof drawExplosionEffects === 'function') drawExplosionEffects();
+        
+        // Aim line
+        if (typeof window.drawAimLine === 'function') window.drawAimLine();
+        
+        // ⭐ TÁN CÂY
+        if (typeof drawMapCanopy === 'function') drawMapCanopy();
+      // ⭐ VẼ KHỐI 4D
+        if (typeof hypercube !== 'undefined') hypercube.draw();
+      // ⭐ VẼ VỆT CHÉM (ĐÈ LÊN TRÊN)
+        if (typeof drawSlashTrails === 'function') {
+            drawSlashTrails(ctx, player.x - Camera.x, player.y - Camera.y);
+        }
+    
+      // ⭐ VẼ SỐ MÁU BỊ TRỪ (ĐÈ LÊN TRÊN)
+        if (typeof drawDamageNumbers === 'function') {
+            drawDamageNumbers();
+        }
+    
+    // 🌀 HIỆU ỨNG CHUYỂN MAP (vẽ trên cùng, đè lên mọi thứ)
+        if (typeof drawMapTransition === 'function') drawMapTransition();
     } catch (e) {
         console.error('❌ drawGame error:', e);
     }
-};
-    
-    // 🟣 VẼ ORB DECADE (chỉ map 1)
-    if (
-        typeof orbDecadeActive !== 'undefined' &&
-        orbDecadeActive &&
-        currentMap === 1 &&
-        typeof ORB_DECADE !== 'undefined' &&
-        typeof Camera !== 'undefined' &&
-        typeof ctx !== 'undefined'
-    ) {
-        const s = Camera.toScreen(ORB_DECADE.x, ORB_DECADE.y);
-        const pulse = Math.sin(Date.now() * 0.005) * 5;
-        ctx.save();
-        const glow = ctx.createRadialGradient(s.x, s.y, 5, s.x, s.y, 65 + pulse);
-        glow.addColorStop(0, 'rgba(255,255,255,0.9)');
-        glow.addColorStop(0.25, 'rgba(190,80,255,0.65)');
-        glow.addColorStop(0.65, 'rgba(120,30,255,0.25)');
-        glow.addColorStop(1, 'rgba(100,0,180,0)');
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, 65 + pulse, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#8b2cff';
-        ctx.strokeStyle = '#f0c8ff';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, ORB_DECADE.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(s.x - 9, s.y - 10, 8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-    }
-     
-    // Đạn
-    if (typeof drawBullets === 'function') drawBullets();
-    
-    // NPC
-    if (typeof drawNPCs === 'function') drawNPCs();
-    
-    // Nhân vật
-    // Nhân vật
-if (typeof player !== 'undefined' && typeof Camera !== 'undefined') {
-    const ox = player.x, oy = player.y;
-    player.x -= Camera.x;
-    player.y -= Camera.y;
-    player.draw(ctx);
-    player.x = ox;
-    player.y = oy;
-    
-    // ⭐ GỌI RIÊNG SAU KHI PHỤC HỒI
-    if (typeof drawWeapon === 'function') {
-        try { drawWeapon(ctx); } catch(e) {}
-    }
-}
-    
-    // Quái
-    if (typeof drawMonsters === 'function') drawMonsters();
-    
-    // Boss
-    if (typeof drawBoss === 'function') drawBoss();
-    if (typeof drawBossBullets === 'function') drawBossBullets();
-    
-    // Items
-    if (typeof drawDroppedItems === 'function') drawDroppedItems();
-    if (typeof drawExplosionEffects === 'function') drawExplosionEffects();
-    
-    // Aim line
-    if (typeof window.drawAimLine === 'function') window.drawAimLine();
-    
-    // ⭐ TÁN CÂY
-    if (typeof drawMapCanopy === 'function') drawMapCanopy();
-  // ⭐ VẼ KHỐI 4D
-if (typeof hypercube !== 'undefined') hypercube.draw();
-  // ⭐ VẼ VỆT CHÉM (ĐÈ LÊN TRÊN)
-if (typeof drawSlashTrails === 'function') {
-    drawSlashTrails(ctx, player.x - Camera.x, player.y - Camera.y);
-}
-
-  // ⭐ VẼ SỐ MÁU BỊ TRỪ (ĐÈ LÊN TRÊN)
-if (typeof drawDamageNumbers === 'function') {
-    drawDamageNumbers();
-}
-
-// 🌀 HIỆU ỨNG CHUYỂN MAP (vẽ trên cùng, đè lên mọi thứ)
-if (typeof drawMapTransition === 'function') drawMapTransition();
 };
 
 // ============================================================
@@ -502,8 +500,7 @@ window.updateGame = function() {
     } catch (e) {
         console.error('❌ updateGame error:', e);
     }
-};
-
+    
     // ⭐ Cứu hộ: nếu lọt vào ô đá thì đẩy ra chỗ trống gần nhất
     if (typeof MAP.findFreeSpot === 'function' && !MAP.isWalkable(player.x, player.y)) {
         const free = MAP.findFreeSpot(player.x, player.y);
@@ -533,27 +530,27 @@ window.updateGame = function() {
     if (typeof updateExplosionEffects === 'function') updateExplosionEffects();
     if (typeof updateNPCSystem === 'function') updateNPCSystem();
     
-if (typeof UI !== 'undefined') UI.update();
-  // ⭐ KHỐI 4D
-if (typeof hypercube !== 'undefined') hypercube.update();
-  // ⭐ CẬP NHẬT BÀN TAY
-if (typeof Hand !== 'undefined' && Hand.update) Hand.update();
+    if (typeof UI !== 'undefined') UI.update();
+    // ⭐ KHỐI 4D
+    if (typeof hypercube !== 'undefined') hypercube.update();
+    // ⭐ CẬP NHẬT BÀN TAY
+    if (typeof Hand !== 'undefined' && Hand.update) Hand.update();
 
-  // ⭐ CẬP NHẬT VỆT CHÉM
-if (typeof updateSlashTrails === 'function') {
-    updateSlashTrails();
-}
+    // ⭐ CẬP NHẬT VỆT CHÉM
+    if (typeof updateSlashTrails === 'function') {
+        updateSlashTrails();
+    }
 
-  // ⭐ CẬP NHẬT SỐ MÁU BỊ TRỪ
-if (typeof updateDamageNumbers === 'function') {
-    updateDamageNumbers();
-}
+    // ⭐ CẬP NHẬT SỐ MÁU BỊ TRỪ
+    if (typeof updateDamageNumbers === 'function') {
+        updateDamageNumbers();
+    }
 
-// 🌀 HIỆU ỨNG CHUYỂN MAP
-if (typeof updateMapTransition === 'function') updateMapTransition();
+    // 🌀 HIỆU ỨNG CHUYỂN MAP
+    if (typeof updateMapTransition === 'function') updateMapTransition();
 
-// 🗺️ HỆ THỐNG CỦA MAP (cổng dịch chuyển, vùng boss, orb)
-if (typeof updateMapSystems === 'function') updateMapSystems();
+    // 🗺️ HỆ THỐNG CỦA MAP (cổng dịch chuyển, vùng boss, orb)
+    if (typeof updateMapSystems === 'function') updateMapSystems();
 };
 
 
