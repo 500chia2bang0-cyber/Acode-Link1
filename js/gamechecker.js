@@ -196,7 +196,7 @@ function attachJoystickEvents() {
 window.attachJoystickEvents = attachJoystickEvents;
 
 // ============================================================
-// XỬ LÝ THẢ
+// XỬ LÝ THẢ JOYSTICK BẮN
 // ============================================================
 function handleFireJoyRelease() {
     if (fireJoy._hasFired) return;
@@ -209,17 +209,22 @@ function handleFireJoyRelease() {
     
     console.log('🔥 Thả | Item:', item ? item.name : 'none');
     
+    // ⭐ CHỈ KÍCH HOẠT TAP-TO-FIRE WEAPONS (sniper, shotgun, scythe, consumables)
+    // Auto weapons bắn liên tục trong updateGame qua fireJoy.shouldFire()
     if (item && item.type !== 'material') {
-        if (typeof activateSniperItem === 'function') {
+        const isAutoWeapon = item.type === 'weapon' && item.mode === 'auto';
+        
+        if (!isAutoWeapon && typeof activateSniperItem === 'function') {
             activateSniperItem(item, finalAngle);
         }
+        // Auto weapons: không làm gì khi thả - bắn liên tục trong updateGame
     }
     
     GAME_STATE.aimLine.active = false;
     fireJoy.active = false;
     fireJoy.pointerId = null;
-    fireJoy.el.style.transform = 'translate(-50%, -50%)';
-    fireJoy.indicator.classList.remove('active');
+    if (fireJoy.el) fireJoy.el.style.transform = 'translate(-50%, -50%)';
+    if (fireJoy.indicator) fireJoy.indicator.classList.remove('active');
     
     setTimeout(function() {
         fireJoy._hasFired = false;
@@ -471,36 +476,37 @@ function exitMap2() {
 
 
 // ============================================================
-// 👆 NÚT ORB
+// 👆 NÚT ORB DECADE
 // ============================================================
 
 function initOrbDecadeButton() {
-
-    const btn =
-        document.getElementById('orbDecadeBtn');
-
+    const btn = document.getElementById('orbDecadeBtn');
+    
     if (!btn) {
-        console.warn(
-            '⚠️ Không tìm thấy orbDecadeBtn'
-        );
+        console.warn('⚠️ Không tìm thấy orbDecadeBtn, thử lại sau...');
+        setTimeout(initOrbDecadeButton, 500);
         return;
     }
-
-    btn.addEventListener(
-        'click',
-        function(e) {
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            enterMap2();
-
-        }
-    );
-
-    console.log(
-        '🟣 Nút Orb Decade đã sẵn sàng!'
-    );
+    
+    // Clone để xóa event cũ
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    
+    newBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🟣 Orb Decade clicked - entering Map 2');
+        enterMap2();
+    });
+    
+    // Touch support
+    newBtn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        enterMap2();
+    }, { passive: false });
+    
+    console.log('🟣 Nút Orb Decade đã sẵn sàng!');
 }
 
 
@@ -533,69 +539,88 @@ window.addEventListener(
 // ============================================================
 let settingsOpen = false;
 
+// ⭐ HÀM MỞ SETTINGS - có thể gọi từ bất cứ đâu
+function openSettingsPanel() {
+    const settingsPanel = document.getElementById('settingsPanel');
+    if (settingsPanel) {
+        settingsPanel.classList.add('open');
+        document.body.classList.add('settings-open');
+        settingsOpen = true;
+        
+        // Update slider values from current state
+        updateSettingsUI();
+    }
+}
+
+// ⭐ HÀM ĐÓNG SETTINGS
+function closeSettingsPanel() {
+    const settingsPanel = document.getElementById('settingsPanel');
+    if (settingsPanel) {
+        settingsPanel.classList.remove('open');
+        document.body.classList.remove('settings-open');
+        settingsOpen = false;
+    }
+}
+
+// ⭐ KHỞI TẠO SETTINGS PANEL VÀ NÚT SETTINGS
 function initSettingsPanel() {
+    console.log('⚙️ Khởi tạo Settings Panel...');
+    
     const settingsBtn = document.getElementById('gameSettingsBtn');
     const settingsPanel = document.getElementById('settingsPanel');
     const settingsClose = document.getElementById('settingsClose');
+    
+    if (!settingsBtn) {
+        console.warn('⚠️ Không tìm thấy gameSettingsBtn, thử lại sau...');
+        setTimeout(initSettingsPanel, 500);
+        return;
+    }
+    
+    if (!settingsPanel) {
+        console.warn('⚠️ Không tìm thấy settingsPanel');
+        return;
+    }
+    
+    // ⭐ XÓA EVENT CŨ (nếu có) bằng cách clone nút
+    const newSettingsBtn = settingsBtn.cloneNode(true);
+    settingsBtn.parentNode.replaceChild(newSettingsBtn, settingsBtn);
+    
+    // Gắn event cho nút settings mới
+    newSettingsBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('⚙️ Settings button clicked');
+        openSettingsPanel();
+    });
+    
+    // Touch support
+    newSettingsBtn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openSettingsPanel();
+    }, { passive: false });
+    
+    // Close button
+    if (settingsClose) {
+        const newCloseBtn = settingsClose.cloneNode(true);
+        settingsClose.parentNode.replaceChild(newCloseBtn, settingsClose);
+        newCloseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeSettingsPanel();
+        });
+    }
+    
+    // Camera zoom controls
     const zoomInBtn = document.getElementById('zoomInBtn');
     const zoomOutBtn = document.getElementById('zoomOutBtn');
     const cameraZoomSlider = document.getElementById('cameraZoomSlider');
     const zoomValue = document.getElementById('zoomValue');
     const smoothCameraToggle = document.getElementById('smoothCameraToggle');
     
-    // Master volume
-    const masterVolumeSlider = document.getElementById('masterVolumeSlider');
-    const masterVolumeValue = document.getElementById('masterVolumeValue');
-    const sfxVolumeSlider = document.getElementById('sfxVolumeSlider');
-    const sfxVolumeValue = document.getElementById('sfxVolumeValue');
-    const musicVolumeSlider = document.getElementById('musicVolumeSlider');
-    const musicVolumeValue = document.getElementById('musicVolumeValue');
+    if (zoomInBtn) zoomInBtn.addEventListener('click', () => adjustCameraZoom(0.1));
+    if (zoomOutBtn) zoomOutBtn.addEventListener('click', () => adjustCameraZoom(-0.1));
     
-    // Gameplay toggles
-    const autoAttackToggle = document.getElementById('autoAttackToggle');
-    const showDamageNumbersToggle = document.getElementById('showDamageNumbersToggle');
-    const showFloatingTextToggle = document.getElementById('showFloatingTextToggle');
-    
-    // Data buttons
-    const saveGameBtn = document.getElementById('saveGameBtn');
-    const exportSaveBtn = document.getElementById('exportSaveBtn');
-    const importSaveBtn = document.getElementById('importSaveBtn');
-    const importSaveFile = document.getElementById('importSaveFile');
-    const resetGameBtn = document.getElementById('resetGameBtn');
-
-    // Open settings from game screen button
-    if (settingsBtn) {
-        settingsBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            openSettingsPanel();
-        });
-    }
-
-    // Close settings
-    if (settingsClose) {
-        settingsClose.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            closeSettingsPanel();
-        });
-    }
-
-    // Camera zoom controls
-    if (zoomInBtn) {
-        zoomInBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            adjustCameraZoom(0.1);
-        });
-    }
-
-    if (zoomOutBtn) {
-        zoomOutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            adjustCameraZoom(-0.1);
-        });
-    }
-
     if (cameraZoomSlider) {
         cameraZoomSlider.addEventListener('input', function() {
             const zoom = parseFloat(this.value);
@@ -603,14 +628,21 @@ function initSettingsPanel() {
             if (zoomValue) zoomValue.textContent = Math.round(zoom * 100) + '%';
         });
     }
-
+    
     if (smoothCameraToggle) {
         smoothCameraToggle.addEventListener('change', function() {
             window.smoothCameraEnabled = this.checked;
         });
     }
-
+    
     // Volume controls
+    const masterVolumeSlider = document.getElementById('masterVolumeSlider');
+    const masterVolumeValue = document.getElementById('masterVolumeValue');
+    const sfxVolumeSlider = document.getElementById('sfxVolumeSlider');
+    const sfxVolumeValue = document.getElementById('sfxVolumeValue');
+    const musicVolumeSlider = document.getElementById('musicVolumeSlider');
+    const musicVolumeValue = document.getElementById('musicVolumeValue');
+    
     if (masterVolumeSlider) {
         masterVolumeSlider.addEventListener('input', function() {
             const vol = parseFloat(this.value);
@@ -618,7 +650,7 @@ function initSettingsPanel() {
             if (typeof window.setMasterVolume === 'function') window.setMasterVolume(vol);
         });
     }
-
+    
     if (sfxVolumeSlider) {
         sfxVolumeSlider.addEventListener('input', function() {
             const vol = parseFloat(this.value);
@@ -626,7 +658,7 @@ function initSettingsPanel() {
             if (typeof window.setSfxVolume === 'function') window.setSfxVolume(vol);
         });
     }
-
+    
     if (musicVolumeSlider) {
         musicVolumeSlider.addEventListener('input', function() {
             const vol = parseFloat(this.value);
@@ -634,81 +666,56 @@ function initSettingsPanel() {
             if (typeof window.setMusicVolume === 'function') window.setMusicVolume(vol);
         });
     }
-
+    
     // Gameplay toggles
-    if (autoAttackToggle) {
-        autoAttackToggle.addEventListener('change', function() {
-            window.autoAttackEnabled = this.checked;
-        });
-    }
-
-    if (showDamageNumbersToggle) {
-        showDamageNumbersToggle.addEventListener('change', function() {
-            window.showDamageNumbers = this.checked;
-        });
-    }
-
-    if (showFloatingTextToggle) {
-        showFloatingTextToggle.addEventListener('change', function() {
-            window.showFloatingText = this.checked;
-        });
-    }
-
-    // Data management
-    if (saveGameBtn) {
-        saveGameBtn.addEventListener('click', function() {
-            if (typeof window.saveGame === 'function') window.saveGame();
-        });
-    }
-
-    if (exportSaveBtn) {
-        exportSaveBtn.addEventListener('click', function() {
-            if (typeof window.exportSave === 'function') window.exportSave();
-        });
-    }
-
-    if (importSaveBtn) {
-        importSaveBtn.addEventListener('click', function() {
-            if (importSaveFile) importSaveFile.click();
-        });
-    }
-
-    if (importSaveFile) {
-        importSaveFile.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file && typeof window.importSave === 'function') {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    try {
-                        const data = JSON.parse(event.target.result);
-                        window.importSave(data);
-                    } catch (err) {
-                        console.error('Import save error:', err);
-                        if (typeof showNotification === 'function') showNotification('❌ File save không hợp lệ!');
-                    }
-                };
-                reader.readAsText(file);
-            }
-            // Reset file input
-            this.value = '';
-        });
-    }
-
-    if (resetGameBtn) {
-        resetGameBtn.addEventListener('click', function() {
-            if (confirm('⚠️ CẢNH BÁO: Xóa toàn bộ dữ liệu game? Hành động này không thể hoàn tác!')) {
-                if (typeof window.resetGame === 'function') window.resetGame();
-            }
-        });
-    }
-
+    const autoAttackToggle = document.getElementById('autoAttackToggle');
+    const showDamageNumbersToggle = document.getElementById('showDamageNumbersToggle');
+    const showFloatingTextToggle = document.getElementById('showFloatingTextToggle');
+    
+    if (autoAttackToggle) autoAttackToggle.addEventListener('change', () => { window.autoAttackEnabled = autoAttackToggle.checked; });
+    if (showDamageNumbersToggle) showDamageNumbersToggle.addEventListener('change', () => { window.showDamageNumbers = showDamageNumbersToggle.checked; });
+    if (showFloatingTextToggle) showFloatingTextToggle.addEventListener('change', () => { window.showFloatingText = showFloatingTextToggle.checked; });
+    
+    // Data buttons
+    const saveGameBtn = document.getElementById('saveGameBtn');
+    const exportSaveBtn = document.getElementById('exportSaveBtn');
+    const importSaveBtn = document.getElementById('importSaveBtn');
+    const importSaveFile = document.getElementById('importSaveFile');
+    const resetGameBtn = document.getElementById('resetGameBtn');
+    
+    if (saveGameBtn) saveGameBtn.addEventListener('click', () => { if (typeof window.saveGame === 'function') window.saveGame(); });
+    if (exportSaveBtn) exportSaveBtn.addEventListener('click', () => { if (typeof window.exportSave === 'function') window.exportSave(); });
+    if (importSaveBtn) importSaveBtn.addEventListener('click', () => { if (importSaveFile) importSaveFile.click(); });
+    if (importSaveFile) importSaveFile.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file && typeof window.importSave === 'function') {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    window.importSave(data);
+                } catch (err) {
+                    console.error('Import save error:', err);
+                    if (typeof showNotification === 'function') showNotification('❌ File save không hợp lệ!');
+                }
+            };
+            reader.readAsText(file);
+        }
+        this.value = '';
+    });
+    if (resetGameBtn) resetGameBtn.addEventListener('click', function() {
+        if (confirm('⚠️ CẢNH BÁO: Xóa toàn bộ dữ liệu game? Hành động này không thể hoàn tác!')) {
+            if (typeof window.resetGame === 'function') window.resetGame();
+        }
+    });
+    
     // Close on ESC key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && settingsOpen) {
             closeSettingsPanel();
         }
     });
-
+    
     console.log('⚙️ Settings panel initialized');
 }
 
