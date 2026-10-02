@@ -352,17 +352,22 @@ function showNotification(text) {
 function initInventory() {
     console.log('📦 initInventory() bắt đầu...');
     
-    inventory[0] = { ...ITEMS.PISTOL, count: 1 };
-    inventory[1] = { ...ITEMS.AWP, count: 1 };
-    inventory[2] = { ...ITEMS.BARRET, count: 1 };
-    inventory[3] = { ...ITEMS.SHOTGUN, count: 1 };
-    inventory[4] = { ...ITEMS.MIXED_POTION, count: 5 };
-    inventory[5] = { ...ITEMS.BOMB, count: 3 };
-    inventory[15]= { ... ITEMS.COLLAPSED_SCYTHE ,count : 1};
-    inventory[10] = { ...ITEMS.RIFLE, count: 1 };
-    inventory[6] = { ...ITEMS.RAILGUN, count: 1 };
-    inventory[7] = { ...ITEMS.PLASMA, count: 1 };
-    inventory[11] = { ...ITEMS.SWORD, count: 1 };
+    // ⭐ CHỈ POPULATE NẾU INVENTORY RỖNG (new character)
+    const isEmpty = inventory.length === 0 || inventory.every(slot => slot === null);
+    if (isEmpty) {
+        inventory[0] = { ...ITEMS.PISTOL, count: 1 };
+        inventory[1] = { ...ITEMS.AWP, count: 1 };
+        inventory[2] = { ...ITEMS.BARRET, count: 1 };
+        inventory[3] = { ...ITEMS.SHOTGUN, count: 1 };
+        inventory[4] = { ...ITEMS.MIXED_POTION, count: 5 };
+        inventory[5] = { ...ITEMS.BOMB, count: 3 };
+        inventory[6] = { ...ITEMS.RAILGUN, count: 1 };
+        inventory[7] = { ...ITEMS.PLASMA, count: 1 };
+        inventory[10] = { ...ITEMS.RIFLE, count: 1 };
+        inventory[11] = { ...ITEMS.SWORD, count: 1 };
+        inventory[15] = { ...ITEMS.COLLAPSED_SCYTHE, count: 1 };
+        console.log('🎁 Starter items populated via initInventory');
+    }
     
     initInventoryUI();
     

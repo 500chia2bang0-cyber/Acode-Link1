@@ -73,12 +73,12 @@ if (document.readyState === 'loading') {
 }
 
 // ============================================================
-// RESIZE (CHỈ SET 1 LẦN)
+// RESIZE (CHỈ SET 1 LẦN) - Đọc kích thước thực từ CSS (aspect-ratio 4:3)
 // ============================================================
 function resize() {
-    // ⭐ DÙNG WINDOW SIZE THAY VÌ PARENT
-    const newW = window.innerWidth;
-    const newH = window.innerHeight;
+    // ⭐ Đọc kích thước thực của canvas sau khi CSS aspect-ratio áp dụng
+    const newW = canvas.clientWidth;
+    const newH = canvas.clientHeight;
     
     // ⭐ KHÔNG THAY ĐỔI → KHÔNG LÀM GÌ
     if (Math.abs(_lastW - newW) < 5 && Math.abs(_lastH - newH) < 5) {
@@ -88,9 +88,11 @@ function resize() {
     _lastW = newW;
     _lastH = newH;
     
+    // Set canvas resolution (CSS pixels * devicePixelRatio)
     canvas.width = Math.floor(newW * devicePixelRatio);
     canvas.height = Math.floor(newH * devicePixelRatio);
     
+    // Game logical size (CSS pixels)
     W = newW;
     H = newH;
     

@@ -36,7 +36,14 @@ window.updateCameraZoom = function(zoom) {
 
 window.applyCameraTransform = function() {
     const zoom = window.cameraZoom || 1;
-    ctx.setTransform(devicePixelRatio * zoom, 0, 0, devicePixelRatio * zoom, 0, 0);
+    // Scale from screen center (W/2, H/2) so zoom centers on player
+    const centerX = W / 2;
+    const centerY = H / 2;
+    ctx.setTransform(
+        devicePixelRatio * zoom, 0, 0, devicePixelRatio * zoom,
+        centerX * devicePixelRatio * (1 - zoom),
+        centerY * devicePixelRatio * (1 - zoom)
+    );
 };
 
 // ============================================================
@@ -438,6 +445,12 @@ function applySaveData(saveData) {
     if (saveData.inventory && typeof inventory !== 'undefined') {
         inventory.length = 0;
         inventory.push(...saveData.inventory);
+        
+        // ⭐ POPULATE STARTER ITEMS FOR NEW CHARACTER (empty inventory)
+        if (inventory.length === 0 || inventory.every(slot => slot === null)) {
+            populateStarterItems();
+        }
+        
         if (typeof initInventoryUI === 'function') initInventoryUI();
     }
 
@@ -462,6 +475,25 @@ function applySaveData(saveData) {
 
     if (typeof UI !== 'undefined') UI.update();
     console.log('📂 Applied save data:', saveData);
+}
+
+// ⭐ POPULATE STARTER ITEMS FOR NEW CHARACTER
+function populateStarterItems() {
+    if (typeof ITEMS === 'undefined') return;
+    
+    inventory[0] = { ...ITEMS.PISTOL, count: 1 };
+    inventory[1] = { ...ITEMS.AWP, count: 1 };
+    inventory[2] = { ...ITEMS.BARRET, count: 1 };
+    inventory[3] = { ...ITEMS.SHOTGUN, count: 1 };
+    inventory[4] = { ...ITEMS.MIXED_POTION, count: 5 };
+    inventory[5] = { ...ITEMS.BOMB, count: 3 };
+    inventory[6] = { ...ITEMS.RAILGUN, count: 1 };
+    inventory[7] = { ...ITEMS.PLASMA, count: 1 };
+    inventory[10] = { ...ITEMS.RIFLE, count: 1 };
+    inventory[11] = { ...ITEMS.SWORD, count: 1 };
+    inventory[15] = { ...ITEMS.COLLAPSED_SCYTHE, count: 1 };
+    
+    console.log('🎁 Starter items populated for new character');
 }
 
 // ============================================================

@@ -46,12 +46,14 @@ body {
     align-items: center;
 }
 
-/* ===== MÀN HÌNH GAME (11:4 ngang) ===== */
-/* ⭐ MÀN HÌNH GAME — BẮT BUỘC NGANG */
+/* ===== MÀN HÌNH GAME — Giữ tỷ lệ 4:3 (khớp map 128x96 tiles) ===== */
 #gameScreen {
     position: relative;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
+    max-width: 100vw;
+    max-height: 100vh;
+    aspect-ratio: 4 / 3;
     background: #1a1a2e;
     overflow: hidden;
 }
