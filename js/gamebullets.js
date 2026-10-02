@@ -186,7 +186,7 @@ function fireByWeapon(angle, type, damage, item) {
             fireSniperBullet(angle, damage, item ? item.pierce : 0);
             break;
         case 'shotgun':
-            fireShotgunBullet(angle, damage);
+            fireShotgunSniperBullet(angle, damage, item);
             break;
         default:
             fireAutoBullet(angle, damage);

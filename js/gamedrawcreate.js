@@ -140,106 +140,42 @@ window.drawGame = function() {
         console.error('❌ drawGame error:', e);
     }
 };
-// ============================================================
-// 🟣 VẼ ORB DECADE
-// ============================================================
-
-if (
-    typeof orbDecadeActive !== 'undefined' &&
-    orbDecadeActive &&
-    currentMap === 1
-) {
-    const s = Camera.toScreen(
-        ORB_DECADE.x,
-        ORB_DECADE.y
-    );
-
-    const pulse = Math.sin(Date.now() * 0.005) * 5;
-
-    ctx.save();
-
-    // Hào quang
-    const glow = ctx.createRadialGradient(
-        s.x,
-        s.y,
-        5,
-        s.x,
-        s.y,
-        65 + pulse
-    );
-
-    glow.addColorStop(
-        0,
-        'rgba(255,255,255,0.9)'
-    );
-
-    glow.addColorStop(
-        0.25,
-        'rgba(190,80,255,0.65)'
-    );
-
-    glow.addColorStop(
-        0.65,
-        'rgba(120,30,255,0.25)'
-    );
-
-    glow.addColorStop(
-        1,
-        'rgba(100,0,180,0)'
-    );
-
-    ctx.fillStyle = glow;
-
-    ctx.beginPath();
-
-    ctx.arc(
-        s.x,
-        s.y,
-        65 + pulse,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-    // Orb
-    ctx.fillStyle = '#8b2cff';
-
-    ctx.strokeStyle = '#f0c8ff';
-
-    ctx.lineWidth = 4;
-
-    ctx.beginPath();
-
-    ctx.arc(
-        s.x,
-        s.y,
-        ORB_DECADE.radius,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-    ctx.stroke();
-
-    // Lõi sáng
-    ctx.fillStyle = '#ffffff';
-
-    ctx.beginPath();
-
-    ctx.arc(
-        s.x - 9,
-        s.y - 10,
-        8,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-    ctx.restore();
-}
     
+    // 🟣 VẼ ORB DECADE (chỉ map 1)
+    if (
+        typeof orbDecadeActive !== 'undefined' &&
+        orbDecadeActive &&
+        currentMap === 1 &&
+        typeof ORB_DECADE !== 'undefined' &&
+        typeof Camera !== 'undefined' &&
+        typeof ctx !== 'undefined'
+    ) {
+        const s = Camera.toScreen(ORB_DECADE.x, ORB_DECADE.y);
+        const pulse = Math.sin(Date.now() * 0.005) * 5;
+        ctx.save();
+        const glow = ctx.createRadialGradient(s.x, s.y, 5, s.x, s.y, 65 + pulse);
+        glow.addColorStop(0, 'rgba(255,255,255,0.9)');
+        glow.addColorStop(0.25, 'rgba(190,80,255,0.65)');
+        glow.addColorStop(0.65, 'rgba(120,30,255,0.25)');
+        glow.addColorStop(1, 'rgba(100,0,180,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 65 + pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#8b2cff';
+        ctx.strokeStyle = '#f0c8ff';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, ORB_DECADE.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(s.x - 9, s.y - 10, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+     
     // Đạn
     if (typeof drawBullets === 'function') drawBullets();
     
@@ -483,24 +419,52 @@ window.loadSaveData = function(slotIndex) {
 };
 
 function applySaveData(saveData) {
-    SaveSystem.applySaveData(saveData);
-}
+    if (!saveData) return;
+
+    // Restore player state
+    if (typeof player !== 'undefined' && saveData.player) {
+        player.x = saveData.player.x;
+        player.y = saveData.player.y;
+        player.hp = saveData.player.hp;
+        player.maxHp = saveData.player.maxHp;
+        player.mp = saveData.player.mp;
+        player.maxMp = saveData.player.maxMp;
+        player.coins = saveData.player.coins;
+        player.level = saveData.player.level;
+        player.exp = saveData.player.exp;
+        player.expToNext = saveData.player.expToNext;
+        player.updateMaxStats();
     }
-    
+
+    // Restore inventory
+    if (saveData.inventory && typeof inventory !== 'undefined') {
+        inventory.length = 0;
+        inventory.push(...saveData.inventory);
+        if (typeof initInventoryUI === 'function') initInventoryUI();
+    }
+
+    // Restore selected slot
+    if (saveData.selectedSlot !== undefined) {
+        selectedSlot = saveData.selectedSlot;
+        if (typeof updateHotbarUI === 'function') updateHotbarUI();
+    }
+
     // Restore map
     if (saveData.currentMap && typeof enterMap === 'function') {
         enterMap(saveData.currentMap);
     }
-    
+
     // Restore kill count
     if (saveData.killCount !== undefined) killCount = saveData.killCount;
-    
+
+    // Restore map state
+    if (typeof bossSpawned !== 'undefined') bossSpawned = saveData.bossSpawned || false;
+    if (typeof hypercube !== 'undefined') hypercube.interacted = saveData.hypercubeInteracted || false;
+    if (typeof map2Visited !== 'undefined') map2Visited = saveData.map2Visited || false;
+
     if (typeof UI !== 'undefined') UI.update();
     console.log('📂 Applied save data:', saveData);
 }
-
-// Make loadSaveData globally accessible for gamemenu
-window.loadSaveData = loadSaveData;
 
 // ============================================================
 // UPDATE GAME
@@ -539,18 +503,7 @@ window.updateGame = function() {
         console.error('❌ updateGame error:', e);
     }
 };
-        if (MAP.isWalkable(player.x + half, ny - half) &&
-            MAP.isWalkable(player.x + half, ny + half) &&
-            MAP.isWalkable(player.x - half, ny - half) &&
-            MAP.isWalkable(player.x - half, ny + half)) {
-            player.y = ny;
-        }
-    }
-    
-    const half = player.size / 2;
-    player.x = Math.max(half, Math.min(MAP.getWidth() - half, player.x));
-    player.y = Math.max(half, Math.min(MAP.getHeight() - half, player.y));
-    
+
     // ⭐ Cứu hộ: nếu lọt vào ô đá thì đẩy ra chỗ trống gần nhất
     if (typeof MAP.findFreeSpot === 'function' && !MAP.isWalkable(player.x, player.y)) {
         const free = MAP.findFreeSpot(player.x, player.y);
