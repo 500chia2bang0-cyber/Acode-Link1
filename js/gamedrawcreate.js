@@ -551,11 +551,14 @@ window.updateGame = function() {
     if (typeof fireJoy !== 'undefined' && fireJoy.shouldFire && fireJoy.shouldFire()) {
         const item = (typeof inventory !== 'undefined' && typeof selectedSlot !== 'undefined') 
             ? inventory[selectedSlot] : null;
+        const angle = fireJoy.getAngle();
+        if (angle === null) return; // ⭐ Guard against null angle
+        
         if (item && typeof fireByWeapon === 'function') {
             const type = typeof getWeaponType === 'function' ? getWeaponType(item) : 'auto';
-            fireByWeapon(fireJoy.getAngle(), type, item.damage, item);
+            fireByWeapon(angle, type, item.damage, item);
         } else if (typeof fireAutoBullet === 'function') {
-            fireAutoBullet(fireJoy.getAngle(), 15);
+            fireAutoBullet(angle, 15);
         }
     }
     
@@ -606,6 +609,11 @@ function initGameUI() {
     // ⭐ KHỞI TẠO NPC SYSTEM (nút Talk, Shop, Smith)
     if (typeof initNPCSystem === 'function') {
         initNPCSystem();
+    }
+    
+    // ⭐ KHỞI TẠO SCROLLBAR KHO ĐỒ
+    if (typeof initScrollbar === 'function') {
+        initScrollbar();
     }
     
     // ⭐ GẮN EVENT JOYSTICK (sau khi gamechecker.js đã load)

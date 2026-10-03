@@ -303,6 +303,8 @@ function addItemToInventory(itemTemplate, count) {
     if (!itemTemplate) return false;
     if (typeof count === 'undefined') count = 1;
     
+    console.log('📦 addItemToInventory:', itemTemplate.name, 'x' + count, 'stackable:', itemTemplate.stackable);
+    
     if (itemTemplate.stackable) {
         for (let i = 0; i < inventory.length; i++) {
             const item = inventory[i];
@@ -315,6 +317,7 @@ function addItemToInventory(itemTemplate, count) {
                     if (count <= 0) {
                         updateInventoryUI();
                         updateHotbarUI();
+                        console.log('✅ Stacked:', itemTemplate.name, 'total:', item.count);
                         return true;
                     }
                 }
@@ -322,13 +325,20 @@ function addItemToInventory(itemTemplate, count) {
         }
     }
     
+    // ⭐ FIND FIRST EMPTY SLOT (skip null/undefined)
     for (let i = 0; i < inventory.length; i++) {
         if (!inventory[i]) {
             inventory[i] = { ...itemTemplate, count: count };
             updateInventoryUI();
             updateHotbarUI();
+            console.log('✅ Added to slot', i, ':', itemTemplate.name);
             return true;
         }
+    }
+    
+    console.warn('⚠️ Inventory full! Cannot add:', itemTemplate.name);
+    if (typeof showNotification === 'function') {
+        showNotification('❌ Kho đồ đã đầy!');
     }
     return false;
 }

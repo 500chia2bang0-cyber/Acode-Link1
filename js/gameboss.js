@@ -357,31 +357,36 @@ function drawBossBullets() {
 // ============================================================
 function onBossKilled() {
     console.log('🎉 BOSS CHẾT!');
-  // ============================================================
-// 🟣 BOSS CHẾT → ORB DECADE XUẤT HIỆN
-// ============================================================
+    // ============================================================
+    // 🟣 BOSS CHẾT → ORB DECADE XUẤT HIỆN
+    // ============================================================
 
-if (currentMap === 1 && typeof orbDecadeActive !== 'undefined') {
+    if (currentMap === 1 && typeof orbDecadeActive !== 'undefined') {
 
-    orbDecadeActive = true;
+        orbDecadeActive = true;
 
-    console.log(
-        '🟣 BOSS CHẾT → ORB DECADE XUẤT HIỆN!'
-    );
-
-    if (typeof showNotification === 'function') {
-
-        showNotification(
-            '🟣 Một Orb Decade bí ẩn đã xuất hiện giữa đấu trường!'
+        console.log(
+            '🟣 BOSS CHẾT → ORB DECADE XUẤT HIỆN! orbDecadeActive =', orbDecadeActive
         );
 
+        if (typeof showNotification === 'function') {
+
+            showNotification(
+                '🟣 Một Orb Decade bí ẩn đã xuất hiện giữa đấu trường!'
+            );
+
+        }
+        
+        // ⭐ Force show orb decade button if player is nearby
+        if (typeof checkOrbDecadeInteraction === 'function') {
+            checkOrbDecadeInteraction();
+        }
     }
-}
     
     if (typeof player === 'undefined') return;
     if (typeof ITEMS === 'undefined') return;
     if (typeof droppedItems === 'undefined') return;
-   // ⭐ RESET KHỐI 4D (chỉ map 1)
+    // ⭐ RESET KHỐI 4D (chỉ map 1)
     if (currentMap === 1 && typeof hypercube !== 'undefined') {
         setTimeout(function() {
             // ⚠️ Nếu người chơi đã rời map 1 thì bỏ qua, tránh reset nhầm
