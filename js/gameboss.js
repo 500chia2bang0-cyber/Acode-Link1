@@ -377,9 +377,9 @@ function onBossKilled() {
 
         }
         
-        // ⭐ Force show orb decade button if player is nearby
+        // ⭐ FORCE ORB DECADE BUTTON CHECK - ensure it shows if player nearby
         if (typeof checkOrbDecadeInteraction === 'function') {
-            checkOrbDecadeInteraction();
+            setTimeout(checkOrbDecadeInteraction, 100);
         }
     }
     

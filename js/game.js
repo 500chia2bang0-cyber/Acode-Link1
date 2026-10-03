@@ -235,8 +235,10 @@ function initJoysticks() {
         
         getAngle: function() {
             if (!this.active) return null;
+            // ⭐ Ensure angle is valid - fallback to 0 if not set
+            const currentAngle = (typeof this.angle === 'number' && !isNaN(this.angle)) ? this.angle : 0;
             const step = (2 * Math.PI) / 64;
-            return Math.round(this.angle / step) * step;
+            return Math.round(currentAngle / step) * step;
         }
     };
     

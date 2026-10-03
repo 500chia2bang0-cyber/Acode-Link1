@@ -444,8 +444,14 @@ function applySaveData(saveData) {
 
     // Restore inventory
     if (saveData.inventory && typeof inventory !== 'undefined') {
+        // ⭐ PRESERVE 120-SLOT SIZE: Clear but keep array reference, then fill
         inventory.length = 0;
         inventory.push(...saveData.inventory);
+        
+        // ⭐ PAD TO 120 SLOTS if save data is shorter (old saves)
+        while (inventory.length < 120) {
+            inventory.push(null);
+        }
         
         // ⭐ POPULATE STARTER ITEMS FOR NEW CHARACTER (empty inventory)
         if (inventory.length === 0 || inventory.every(slot => slot === null)) {
@@ -552,13 +558,16 @@ window.updateGame = function() {
         const item = (typeof inventory !== 'undefined' && typeof selectedSlot !== 'undefined') 
             ? inventory[selectedSlot] : null;
         const angle = fireJoy.getAngle();
-        if (angle === null) return; // ⭐ Guard against null angle
-        
-        if (item && typeof fireByWeapon === 'function') {
-            const type = typeof getWeaponType === 'function' ? getWeaponType(item) : 'auto';
-            fireByWeapon(angle, type, item.damage, item);
-        } else if (typeof fireAutoBullet === 'function') {
-            fireAutoBullet(angle, 15);
+        if (angle === null) {
+            console.warn('⚠️ fireJoy.getAngle() returned null, fireJoy.active:', fireJoy.active, 'fireJoy.pointerId:', fireJoy.pointerId);
+        } else {
+            console.log('🔫 Auto fire! Angle:', angle, 'Item:', item ? item.name : 'none');
+            if (item && typeof fireByWeapon === 'function') {
+                const type = typeof getWeaponType === 'function' ? getWeaponType(item) : 'auto';
+                fireByWeapon(angle, type, item.damage, item);
+            } else if (typeof fireAutoBullet === 'function') {
+                fireAutoBullet(angle, 15);
+            }
         }
     }
     
@@ -569,6 +578,11 @@ window.updateGame = function() {
     if (typeof updateDroppedItems === 'function') updateDroppedItems();
     if (typeof updateExplosionEffects === 'function') updateExplosionEffects();
     if (typeof updateNPCSystem === 'function') updateNPCSystem();
+    
+    // ⭐ CHECK ORB DECADE INTERACTION EVERY FRAME (Map 1 only)
+    if (currentMap === 1 && typeof checkOrbDecadeInteraction === 'function') {
+        checkOrbDecadeInteraction();
+    }
     
     if (typeof UI !== 'undefined') UI.update();
     // ⭐ KHỐI 4D
