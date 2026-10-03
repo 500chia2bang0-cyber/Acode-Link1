@@ -476,6 +476,10 @@ function applySaveData(saveData) {
     if (typeof bossSpawned !== 'undefined') bossSpawned = saveData.bossSpawned || false;
     if (typeof hypercube !== 'undefined') hypercube.interacted = saveData.hypercubeInteracted || false;
     if (typeof map2Visited !== 'undefined') map2Visited = saveData.map2Visited || false;
+    
+    // ⭐ RESTORE MAP STATE FLAGS
+    if (saveData.orbDecadeActive !== undefined) orbDecadeActive = saveData.orbDecadeActive;
+    if (saveData.spawnActive !== undefined) spawnActive = saveData.spawnActive;
 
     if (typeof UI !== 'undefined') UI.update();
     console.log('📂 Applied save data:', saveData);
@@ -594,6 +598,18 @@ window.updateGame = function() {
 // ============================================================
 function initGameUI() {
     console.log('🎮 Khởi tạo Game UI...');
+    
+    // Initialize NPCs for current map
+    if (typeof NPCS !== 'undefined' && typeof MAPS !== 'undefined' && MAPS[currentMap]) {
+        NPCS.length = 0;
+        for (let i = 0; i < MAPS[currentMap].npcs.length; i++) NPCS.push(MAPS[currentMap].npcs[i]);
+        console.log('🧙 NPCs restored for map', currentMap, ':', NPCS.length);
+    }
+    
+    // ⭐ GẮN EVENT JOYSTICK (sau khi gamechecker.js đã load)
+    if (typeof attachJoystickEvents === 'function') {
+        attachJoystickEvents();
+    }
     
     // Initialize settings panel
     if (typeof initSettingsPanel === 'function') {

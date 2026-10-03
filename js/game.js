@@ -40,11 +40,6 @@ function initGame() {
     resize();
     initJoysticks();  // ⭐ Khởi tạo joystick sau khi DOM ready
     
-    // Gắn event listeners cho joystick
-    if (typeof attachJoystickEvents === 'function') {
-        attachJoystickEvents();
-    }
-    
     // Resize listener
     let resizeTimer = null;
     window.addEventListener('resize', function() {

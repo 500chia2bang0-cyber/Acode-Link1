@@ -1031,13 +1031,18 @@ console.log('👾 game3.js sẵn sàng!');
 // 💥 HỆ THỐNG HIỂN THỊ SỐ MÁU BỊ TRỪ (DAMAGE NUMBERS)
 // ============================================================
 let damageNumbers = [];
+const MAX_DAMAGE_NUMBERS = 50; // ⭐ Giới hạn để tránh FPS drop
 
 function addDamageNumber(x, y, amount, color = '#ffdd44', isImmune = false) {
+    // ⭐ Giới hạn số lượng damage numbers
+    if (damageNumbers.length >= MAX_DAMAGE_NUMBERS) {
+        damageNumbers.shift(); // Xóa cái cũ nhất
+    }
     damageNumbers.push({
-        x: x + (Math.random() - 0.5) * 20, // Nhích ngẫu nhiên cho đẹp
+        x: x + (Math.random() - 0.5) * 20,
         y: y + (Math.random() - 0.5) * 10,
         vx: (Math.random() - 0.5) * 1.5,
-        vy: -2 - Math.random() * 2, // Bay lên
+        vy: -2 - Math.random() * 2,
         life: 60,
         maxLife: 60,
         text: isImmune ? 'MISS' : amount.toString(),

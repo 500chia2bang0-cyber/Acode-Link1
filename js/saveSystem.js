@@ -239,7 +239,10 @@ const SaveSystem = (function() {
             killCount: killCount || 0,
             bossSpawned: typeof bossSpawned !== 'undefined' ? bossSpawned : false,
             hypercubeInteracted: typeof hypercube !== 'undefined' ? hypercube.interacted : false,
-            map2Visited: typeof map2Visited !== 'undefined' ? map2Visited : false
+            map2Visited: typeof map2Visited !== 'undefined' ? map2Visited : false,
+            // ⭐ NEW: Save map state flags
+            orbDecadeActive: typeof orbDecadeActive !== 'undefined' ? orbDecadeActive : false,
+            spawnActive: typeof spawnActive !== 'undefined' ? spawnActive : false
         };
     }
 
