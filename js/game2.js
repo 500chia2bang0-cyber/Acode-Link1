@@ -8,8 +8,8 @@
 console.log('🌍 Bắt đầu load game2.js (v2)...');
 
 const MAP_TILE = 40;
-const MAP_COLS = 128;
-const MAP_ROWS = 96;
+const MAP_COLS = 384;
+const MAP_ROWS = 288;
 
 // ============================================================
 // TIỆN ÍCH
@@ -392,11 +392,11 @@ let MAP = MAP1;
 let currentMap = 1;
 
 // ============================================================
-// 🟣 ORB DECADE (chỉ map 1)
+// 🟣 ORB DECADE (chỉ map 1) - GIỮA MAP MỚI (384x288)
 // ============================================================
 const ORB_DECADE = {
-    x: 64 * 40,
-    y: 48 * 40,
+    x: 192 * 40,  // 7680 - giữa map mới
+    y: 144 * 40,  // 5760 - giữa map mới
     radius: 30,
     interactDistance: 110
 };
@@ -1001,12 +1001,12 @@ function drawNPCs() {
 initNPCs();
 
 // ============================================================
-// KHỐI 4D (HYPERCUBE) — chỉ tồn tại ở map 1
+// KHỐI 4D (HYPERCUBE) — chỉ tồn tại ở map 1 - GIỮA MAP MỚI
 // ============================================================
 const hypercube = {
     map: 1,
-    x: 60 * 40,
-    y: 45 * 40,
+    x: 192 * 40,  // 7680 - giữa map mới
+    y: 144 * 40,  // 5760 - giữa map mới
     size: 80,
     interacted: false,
 

@@ -106,7 +106,7 @@ function resize() {
 // NHÂN VẬT
 // ============================================================
 const player = {
-    x: 2560, y: 1920, size: 32, speed: 4,
+    x: 7680, y: 5760, size: 32, speed: 4,  // ⭐ GIỮA MAP MỚI 384x288
     hp: 200, maxHp: 200, mp: 200, maxMp: 200, coins: 0,
     
     level: 1,
@@ -114,8 +114,8 @@ const player = {
     expToNext: 100,
     
     init: function() {
-        this.x = 2560;
-        this.y = 1920;
+        this.x = 7680;  // ⭐ GIỮA MAP MỚI
+        this.y = 5760;  // ⭐ GIỮA MAP MỚI
         this.updateMaxStats();
         this.hp = this.maxHp;
         this.mp = this.maxMp;
@@ -288,22 +288,24 @@ const weaponSprites = {
     scythe: new Image()
 };
 
-weaponSprites.pistol.src = 'assets/sprites/weapons/pistol.png';
-weaponSprites.rifle.src = 'assets/sprites/weapons/assault_rifle.png';
-weaponSprites.shotgun.src = 'assets/sprites/weapons/shotgun.png';
-weaponSprites.sniper.src = 'assets/sprites/weapons/sniper.png';
-weaponSprites.barret.src = 'assets/sprites/weapons/sniper.png';
-weaponSprites.bomb.src = 'assets/sprites/weapons/explosive.png';
-weaponSprites.plasma.src = 'assets/sprites/weapons/plasma.png';
-weaponSprites.railgun.src = 'assets/sprites/weapons/sniper.png';
-weaponSprites.scythe.src = 'assets/sprites/weapons/collapsed_scythe.png';
+// ⭐ Load với error handling cho tất cả sprites
+const weaponSpriteSources = {
+    pistol: 'assets/sprites/weapons/pistol.png',
+    rifle: 'assets/sprites/weapons/assault_rifle.png',
+    shotgun: 'assets/sprites/weapons/shotgun.png',
+    sniper: 'assets/sprites/weapons/sniper.png',
+    barret: 'assets/sprites/weapons/sniper.png',
+    bomb: 'assets/sprites/weapons/explosive.png',
+    plasma: 'assets/sprites/weapons/plasma.png',
+    railgun: 'assets/sprites/weapons/sniper.png',
+    scythe: 'assets/sprites/weapons/collapsed_scythe.png'
+};
 
-weaponSprites.scythe.onload = function() {
-    console.log('✅ Load collapsed_scythe.png OK');
-};
-weaponSprites.scythe.onerror = function() {
-    console.error('❌ Load collapsed_scythe.png FAILED!');
-};
+for (const [key, src] of Object.entries(weaponSpriteSources)) {
+    weaponSprites[key].src = src;
+    weaponSprites[key].onload = () => console.log(`✅ Load ${key}.png OK`);
+    weaponSprites[key].onerror = () => console.error(`❌ Load ${key}.png FAILED!`);
+}
 // ============================================================
 // LOAD SPRITES SLIME
 // ============================================================

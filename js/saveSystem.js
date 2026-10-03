@@ -22,7 +22,7 @@ const SaveSystem = (function() {
             lastPlayed: Date.now(),
             playTime: 0,
             player: {
-                x: 2560, y: 1920,
+                x: 7680, y: 5760,  // ⭐ GIỮA MAP MỚI 384x288
                 hp: 200, maxHp: 200,
                 mp: 200, maxMp: 200,
                 coins: 0,

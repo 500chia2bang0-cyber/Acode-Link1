@@ -127,20 +127,17 @@ window.drawGame = function() {
         if (typeof ctx === 'undefined') return;
         if (typeof W === 'undefined' || W === 0) return;
         
+        // ⭐ RESET TRANSFORM TRƯỚC KHI CLEAR
+        ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+        ctx.clearRect(0, 0, W, H);
+        
         // Apply camera zoom transform
         if (typeof window.applyCameraTransform === 'function') {
             window.applyCameraTransform();
-        } else {
-            // Fallback
-            ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
         }
         
         // Screen effects
         if (typeof applyScreenEffects === 'function') applyScreenEffects();
-        
-        // Clear (account for zoom)
-        const zoom = window.cameraZoom || 1;
-        ctx.clearRect(0, 0, W / zoom, H / zoom);
         
         // ⭐ MAP
         if (typeof drawMapBase === 'function') drawMapBase();
@@ -606,6 +603,11 @@ function initGameUI() {
         console.log('🧙 NPCs restored for map', currentMap, ':', NPCS.length);
     }
     
+    // ⭐ KHỞI TẠO NPC SYSTEM (nút Talk, Shop, Smith)
+    if (typeof initNPCSystem === 'function') {
+        initNPCSystem();
+    }
+    
     // ⭐ GẮN EVENT JOYSTICK (sau khi gamechecker.js đã load)
     if (typeof attachJoystickEvents === 'function') {
         attachJoystickEvents();
@@ -629,6 +631,12 @@ function initGameUI() {
     // Initialize inventory UI if not done
     if (typeof initInventoryUI === 'function') {
         initInventoryUI();
+    }
+    
+    // ⭐ KHỞI TẠO HYPERCUBE - hiển thị nếu chưa tương tác
+    if (typeof hypercube !== 'undefined' && !hypercube.interacted && currentMap === hypercube.map) {
+        const el = document.getElementById('hypercube');
+        if (el) el.style.display = 'block';
     }
     
     console.log('✅ Game UI khởi tạo xong');
