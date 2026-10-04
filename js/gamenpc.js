@@ -248,16 +248,15 @@ function buyShopItem(shopItem) {
     if (shopItem.cost.item_plasma) removeItem('plasma', shopItem.cost.item_plasma);
     if (shopItem.cost.item_sword) removeItem('sword', shopItem.cost.item_sword);
     
-    // ⭐ FIX: Use window.ITEMS for global access
-    const itemDef = (typeof window.ITEMS !== 'undefined' && window.ITEMS[shopItem.item]) 
-        ? window.ITEMS[shopItem.item] 
-        : (typeof ITEMS !== 'undefined' ? ITEMS[shopItem.item] : null);
+    // ⭐ FIX: Use window.ITEMS for global access - ensure ITEMS is available
+    const ITEMS_REF = (typeof window.ITEMS !== 'undefined' ? window.ITEMS : (typeof ITEMS !== 'undefined' ? ITEMS : null));
+    const itemDef = ITEMS_REF ? ITEMS_REF[shopItem.item] : null;
     
     if (itemDef && typeof addItemToInventory === 'function') {
         console.log('🛒 Shop buy:', itemDef.name, '-> adding to inventory');
         addItemToInventory(itemDef, 1);
     } else {
-        console.error('❌ Shop buy failed: itemDef not found for', shopItem.item);
+        console.error('❌ Shop buy failed: itemDef not found for', shopItem.item, '| ITEMS_REF:', ITEMS_REF ? 'exists' : 'null');
     }
     
     if (typeof UI !== 'undefined') UI.update();
@@ -533,16 +532,15 @@ function craftItem(recipe) {
     if (recipe.cost.btoken) removeItem('btoken', recipe.cost.btoken);
     if (recipe.cost.coin) player.coins -= recipe.cost.coin;
     
-    // ⭐ FIX: Use window.ITEMS for global access
-    const itemDef = (typeof window.ITEMS !== 'undefined' && window.ITEMS[recipe.result]) 
-        ? window.ITEMS[recipe.result] 
-        : (typeof ITEMS !== 'undefined' ? ITEMS[recipe.result] : null);
+    // ⭐ FIX: Use window.ITEMS for global access - ensure ITEMS is available
+    const ITEMS_REF = (typeof window.ITEMS !== 'undefined' ? window.ITEMS : (typeof ITEMS !== 'undefined' ? ITEMS : null));
+    const itemDef = ITEMS_REF ? ITEMS_REF[recipe.result] : null;
     
     if (itemDef && typeof addItemToInventory === 'function') {
         console.log('🔨 Craft:', itemDef.name, '-> adding to inventory');
         addItemToInventory(itemDef, 1);
     } else {
-        console.error('❌ Craft failed: itemDef not found for', recipe.result);
+        console.error('❌ Craft failed: itemDef not found for', recipe.result, '| ITEMS_REF:', ITEMS_REF ? 'exists' : 'null');
     }
     
     if (typeof UI !== 'undefined') UI.update();

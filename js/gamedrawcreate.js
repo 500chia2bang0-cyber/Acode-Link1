@@ -36,6 +36,11 @@ window.updateCameraZoom = function(zoom) {
 
 window.applyCameraTransform = function() {
     const zoom = window.cameraZoom || 1;
+    // ⭐ SAFETY CHECK: Ensure W and H are valid
+    if (typeof W === 'undefined' || W === 0 || typeof H === 'undefined' || H === 0) {
+        console.warn('⚠️ applyCameraTransform: W or H is 0, skipping transform');
+        return;
+    }
     // Scale from screen center (W/2, H/2) so zoom centers on player
     const centerX = W / 2;
     const centerY = H / 2;
@@ -125,7 +130,7 @@ function drawWeapon(c, px, py) {
 window.drawGame = function() {
     try {
         if (typeof ctx === 'undefined') return;
-        if (typeof W === 'undefined' || W === 0) return;
+        if (typeof W === 'undefined' || W === 0 || typeof H === 'undefined' || H === 0) return;
         
         // ⭐ RESET TRANSFORM TRƯỚC KHI CLEAR
         ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
@@ -139,8 +144,10 @@ window.drawGame = function() {
         // Screen effects
         if (typeof applyScreenEffects === 'function') applyScreenEffects();
         
-        // ⭐ MAP
-        if (typeof drawMapBase === 'function') drawMapBase();
+        // ⭐ MAP - Only draw if MAP is ready
+        if (typeof drawMapBase === 'function' && typeof MAP !== 'undefined' && MAP.data && MAP.data.length > 0) {
+            drawMapBase();
+        }
     
         // 🌀 CỔNG DỊCH CHUYỂN (map 2)
         if (typeof drawMapPortal === 'function') drawMapPortal();

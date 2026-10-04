@@ -9,8 +9,11 @@ let droppedItems = [];
 const DROP_CONFIG = {
     ITEM_LIFETIME: 600,
     PICKUP_RANGE: 40,
-    MAX_DROPPED_ITEMS: 50  // ⭐ GIỚI HẠN VẬT PHẨM RƠI ĐỂ TRÁNH FPS DROP
+    MAX_DROPPED_ITEMS: 50,  // ⭐ GIỚI HẠN VẬT PHẨM RƠI ĐỂ TRÁNH FPS DROP
+    PICKUP_NOTIFY_COOLDOWN: 300  // ⭐ Cooldown giữa các notification nhặt đồ (ms)
 };
+
+let _lastPickupNotifyTime = 0;
 
 // Cập nhật vật phẩm rơi
 function updateDroppedItems() {
@@ -37,7 +40,12 @@ function updateDroppedItems() {
         // Nhặt nếu lại gần
         if (dist < DROP_CONFIG.PICKUP_RANGE) {
             if (addItemToInventory(drop.item, drop.item.count || 1)) {
-                showNotification('✅ Nhặt: ' + drop.item.name + ' x' + (drop.item.count || 1));
+                // ⭐ THROTTLE: Prevent pickup notification spam
+                const now = Date.now();
+                if (now - _lastPickupNotifyTime >= DROP_CONFIG.PICKUP_NOTIFY_COOLDOWN) {
+                    showNotification('✅ Nhặt: ' + drop.item.name + ' x' + (drop.item.count || 1));
+                    _lastPickupNotifyTime = now;
+                }
                 droppedItems.splice(i, 1);
                 continue;
             }

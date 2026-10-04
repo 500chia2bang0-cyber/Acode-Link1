@@ -448,28 +448,8 @@ function checkOrbDecadeInteraction() {
         return;
     }
 
-    const dx = player.x - ORB_DECADE.x;
-    const dy = player.y - ORB_DECADE.y;
-
-    const distance = Math.sqrt(
-        dx * dx + dy * dy
-    );
-
-    // ========================================================
-    // 👣 PLAYER ĐẾN GẦN ORB
-    // ========================================================
-
-    if (
-        distance <= ORB_DECADE.interactDistance
-    ) {
-
-        btn.style.display = 'flex';
-
-    } else {
-
-        btn.style.display = 'none';
-
-    }
+    // ⭐ FOR TESTING: Always show Orb Decade button on Map 1 when active
+    btn.style.display = 'flex';
 }
 
 

@@ -76,6 +76,25 @@ if (document.readyState === 'loading') {
 // INIT CANVAS ONLY (no game loop)
 // ============================================================
 function initCanvasOnly() {
+    // Ensure canvas is available
+    canvas = document.getElementById('gameCanvas');
+    if (!canvas) {
+        console.error('❌ Canvas not found in initCanvasOnly! Retrying...');
+        setTimeout(initCanvasOnly, 50);
+        return;
+    }
+    
+    ctx = canvas.getContext('2d', { alpha: false });
+    if (!ctx) {
+        console.error('❌ Failed to get canvas context in initCanvasOnly! Retrying...');
+        setTimeout(initCanvasOnly, 50);
+        return;
+    }
+    ctx.imageSmoothingEnabled = false;
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.webkitImageSmoothingEnabled = false;
+    ctx.msImageSmoothingEnabled = false;
+    
     resize();
     initJoysticks();  // ⭐ Khởi tạo joystick sau khi DOM ready
     
@@ -100,6 +119,8 @@ function initCanvasOnly() {
             }
         }, 500);
     });
+    
+    console.log('✅ Canvas initialized:', canvas.width, 'x', canvas.height, '| W:', W, 'H:', H);
 }
 
 // ============================================================
@@ -123,25 +144,43 @@ function resize() {
     const newW = canvas.clientWidth;
     const newH = canvas.clientHeight;
     
+    // ⭐ FALLBACK: If canvas not rendered yet, use window size with 4:3 aspect
+    let finalW = newW, finalH = newH;
+    if (newW === 0 || newH === 0) {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        // Maintain 4:3 aspect ratio
+        if (vw / vh > 4 / 3) {
+            finalW = vh * 4 / 3;
+            finalH = vh;
+        } else {
+            finalW = vw;
+            finalH = vw * 3 / 4;
+        }
+        console.warn('⚠️ Canvas not rendered yet, using fallback size:', finalW, 'x', finalH);
+    }
+    
     // ⭐ KHÔNG THAY ĐỔI → KHÔNG LÀM GÌ
-    if (Math.abs(_lastW - newW) < 5 && Math.abs(_lastH - newH) < 5) {
+    if (Math.abs(_lastW - finalW) < 5 && Math.abs(_lastH - finalH) < 5) {
         return;
     }
     
-    _lastW = newW;
-    _lastH = newH;
+    _lastW = finalW;
+    _lastH = finalH;
     
     // Set canvas resolution (CSS pixels * devicePixelRatio)
-    canvas.width = Math.floor(newW * devicePixelRatio);
-    canvas.height = Math.floor(newH * devicePixelRatio);
+    canvas.width = Math.floor(finalW * devicePixelRatio);
+    canvas.height = Math.floor(finalH * devicePixelRatio);
     
     // Game logical size (CSS pixels)
-    W = newW;
-    H = newH;
+    W = finalW;
+    H = finalH;
     
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(devicePixelRatio, devicePixelRatio);
     ctx.imageSmoothingEnabled = false;
+    
+    console.log('📐 Resize:', W, 'x', H, '| Canvas:', canvas.width, 'x', canvas.height);
 }
 
 // ============================================================
@@ -413,17 +452,17 @@ function calculateDamage(baseDamage, percentMaxHP) {
 // GAME LOOP — CHỜ GAME READY
 // ============================================================
 function loop() {
-    // ⭐ CHỜ GAMEDRAWCREATE LOAD XONG
-    if (!window._gameReady) {
+    // ⭐ CHỜ GAMEDRAWCREATE LOAD XONG VÀ CANVAS SẴN SÀNG
+    if (!window._gameReady || typeof ctx === 'undefined' || typeof W === 'undefined' || W === 0 || typeof H === 'undefined' || H === 0) {
         requestAnimationFrame(loop);
         return;
     }
     
     if (typeof window.updateGame === 'function') {
-        try { window.updateGame(); } catch(e) {}
+        try { window.updateGame(); } catch(e) { console.error('❌ updateGame error:', e); }
     }
     if (typeof window.drawGame === 'function') {
-        try { window.drawGame(); } catch(e) {}
+        try { window.drawGame(); } catch(e) { console.error('❌ drawGame error:', e); }
     }
     requestAnimationFrame(loop);
 }
