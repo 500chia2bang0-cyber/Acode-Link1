@@ -401,7 +401,7 @@ const ORB_DECADE = {
     interactDistance: 110
 };
 
-let orbDecadeActive = false;
+let orbDecadeActive = true; // ⭐ ALWAYS ACTIVE FOR TESTING
 
 // ============================================================
 // 🌀 HIỆU ỨNG CHUYỂN MAP (fade đen)

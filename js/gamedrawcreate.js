@@ -559,9 +559,9 @@ window.updateGame = function() {
             ? inventory[selectedSlot] : null;
         const angle = fireJoy.getAngle();
         if (angle === null) {
-            console.warn('⚠️ fireJoy.getAngle() returned null, fireJoy.active:', fireJoy.active, 'fireJoy.pointerId:', fireJoy.pointerId);
+            console.warn('⚠️ fireJoy.getAngle() returned null, fireJoy.active:', fireJoy.active, 'fireJoy.pointerId:', fireJoy.pointerId, 'item:', item ? item.name : 'none');
         } else {
-            console.log('🔫 Auto fire! Angle:', angle, 'Item:', item ? item.name : 'none');
+            console.log('🔫 Auto fire! Angle:', angle, 'Item:', item ? item.name : 'none', 'Mode:', item ? item.mode : 'N/A');
             if (item && typeof fireByWeapon === 'function') {
                 const type = typeof getWeaponType === 'function' ? getWeaponType(item) : 'auto';
                 fireByWeapon(angle, type, item.damage, item);

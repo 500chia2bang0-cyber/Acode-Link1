@@ -344,17 +344,50 @@ function addItemToInventory(itemTemplate, count) {
     return false;
 }
 
+// ============================================================
+// NOTIFICATION SYSTEM WITH THROTTLING
+// ============================================================
+const NOTIFICATION_CONFIG = {
+    MAX_VISIBLE: 5,           // Max notifications at once
+    THROTTLE_MS: 500,         // Min time between same-type notifications
+    AUTO_REMOVE_MS: 1500      // Auto remove after this time
+};
+
+const _notificationCache = new Map(); // text -> lastShown timestamp
+const _activeNotifications = [];      // Active notification elements
+
 function showNotification(text) {
+    // ⭐ THROTTLE: Prevent same notification spam
+    const now = Date.now();
+    const lastShown = _notificationCache.get(text) || 0;
+    if (now - lastShown < NOTIFICATION_CONFIG.THROTTLE_MS) {
+        return; // Skip this notification
+    }
+    _notificationCache.set(text, now);
+    
+    // ⭐ LIMIT: Remove oldest if at max
+    while (_activeNotifications.length >= NOTIFICATION_CONFIG.MAX_VISIBLE) {
+        const oldest = _activeNotifications.shift();
+        if (oldest && oldest.parentNode) {
+            oldest.classList.add('fade-out');
+            setTimeout(() => oldest.remove(), 300);
+        }
+    }
+    
     const notif = document.createElement('div');
     notif.className = 'notification';
     notif.textContent = text;
     document.body.appendChild(notif);
+    _activeNotifications.push(notif);
+    
     setTimeout(function() {
         notif.classList.add('fade-out');
         setTimeout(function() {
             notif.remove();
+            const idx = _activeNotifications.indexOf(notif);
+            if (idx !== -1) _activeNotifications.splice(idx, 1);
         }, 300);
-    }, 1500);
+    }, NOTIFICATION_CONFIG.AUTO_REMOVE_MS);
 }
 
 // ============================================================

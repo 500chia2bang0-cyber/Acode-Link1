@@ -262,6 +262,17 @@ fireJoy.shouldFire = function() {
     return false;
 };
 
+// ⭐ FORCE ENABLE AUTO FIRE for testing - can be called from console
+window.enableAutoFire = function() {
+    if (fireJoy) {
+        fireJoy.active = true;
+        fireJoy.pointerId = 'keyboard';
+        fireJoy.angle = 0;
+        fireJoy.counter = 0;
+        console.log('✅ Auto fire ENABLED via keyboard simulation');
+    }
+};
+
 // ============================================================
 // VẼ ĐƯỜNG CHỈ
 // ============================================================
