@@ -4,7 +4,6 @@
 console.log('🎮 Bắt đầu load game.js...');
 // ⭐ TRẠNG THÁI SPAWN
 let spawnActive = false;      // Quái có được spawn không
-let hypercubeActive = true;   // Khối 4D có hiện không
 // ⭐ FLAG: Chờ gamedrawcreate.js load xong
 window._gameReady = false;
 
@@ -33,7 +32,7 @@ function initCanvas() {
     console.log('✅ Canvas initialized:', canvas.width, 'x', canvas.height);
     
     // Initialize after canvas is ready
-    initGame();
+    initCanvasOnly();
 }
 
 function initGame() {
@@ -68,10 +67,53 @@ function initGame() {
 
 // Initialize canvas when DOM is ready
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initCanvas);
+    document.addEventListener('DOMContentLoaded', initCanvasOnly);
 } else {
-    initCanvas();
+    initCanvasOnly();
 }
+
+// ============================================================
+// INIT CANVAS ONLY (no game loop)
+// ============================================================
+function initCanvasOnly() {
+    resize();
+    initJoysticks();  // ⭐ Khởi tạo joystick sau khi DOM ready
+    
+    // Resize listener
+    let resizeTimer = null;
+    window.addEventListener('resize', function() {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resize, 300);
+    });
+    
+    window.addEventListener('orientationchange', function() {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resize, 500);
+    });
+    
+    // Show hypercube on load
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            if (typeof hypercube !== 'undefined') {
+                const el = document.getElementById('hypercube');
+                if (el && hypercubeActive) el.style.display = 'block';
+            }
+        }, 500);
+    });
+}
+
+// ============================================================
+// START GAME LOOP (called from gamemenu.js startGame)
+// ============================================================
+function startGameLoop() {
+    if (window._gameLoopStarted) return;
+    window._gameLoopStarted = true;
+    console.log('🎮 Starting game loop...');
+    loop();
+}
+
+// Export
+window.startGameLoop = startGameLoop;
 
 // ============================================================
 // RESIZE (CHỈ SET 1 LẦN) - Đọc kích thước thực từ CSS (aspect-ratio 4:3)

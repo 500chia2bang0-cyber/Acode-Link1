@@ -392,16 +392,21 @@ let MAP = MAP1;
 let currentMap = 1;
 
 // ============================================================
-// 🟣 ORB DECADE (chỉ map 1) - GIỮA MAP MỚI (384x288)
+// 🟣 ORB DECADE (chỉ map 1) - GIỮA MAP MỚI (384x288) - KHÁC VỊ TRÍ PLAYER
 // ============================================================
 const ORB_DECADE = {
     x: 192 * 40,  // 7680 - giữa map mới
-    y: 144 * 40,  // 5760 - giữa map mới
+    y: 100 * 40,  // 4000 - KHÁC player spawn (5760) để không bị overlap
     radius: 30,
     interactDistance: 110
 };
 
 let orbDecadeActive = true; // ⭐ ALWAYS ACTIVE FOR TESTING
+
+// ============================================================
+// HYPERCUBE STATE - sync with hypercube object
+// ============================================================
+let hypercubeActive = true; // Synced with hypercube.interacted in hypercube methods
 
 // ============================================================
 // 🌀 HIỆU ỨNG CHUYỂN MAP (fade đen)

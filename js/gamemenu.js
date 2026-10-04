@@ -337,6 +337,13 @@ function startGame() {
             if (typeof window.initGameUI === 'function') {
                 setTimeout(window.initGameUI, 100);
             }
+            
+            // ⭐ START GAME LOOP AFTER UI INIT
+            setTimeout(function() {
+                if (typeof window.startGameLoop === 'function') {
+                    window.startGameLoop();
+                }
+            }, 200);
         } else {
             setTimeout(tryLoadSave, 100);
         }

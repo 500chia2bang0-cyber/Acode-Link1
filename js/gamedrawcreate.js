@@ -553,6 +553,11 @@ window.updateGame = function() {
 
     Camera.follow(player.x, player.y);
     
+    // ⭐ SYNC HYPERCUBE ACTIVE STATE
+    if (typeof hypercube !== 'undefined') {
+        hypercubeActive = !hypercube.interacted;
+    }
+    
     // Bắn tự động
     if (typeof fireJoy !== 'undefined' && fireJoy.shouldFire && fireJoy.shouldFire()) {
         const item = (typeof inventory !== 'undefined' && typeof selectedSlot !== 'undefined') 
@@ -607,9 +612,7 @@ window.updateGame = function() {
     if (typeof updateMapSystems === 'function') updateMapSystems();
 };
 
-// ============================================================
 // ⭐ KHỞI TẠO UI GAME - Gọi khi game bắt đầu
-// ============================================================
 function initGameUI() {
     console.log('🎮 Khởi tạo Game UI...');
     
@@ -658,7 +661,15 @@ function initGameUI() {
     // ⭐ KHỞI TẠO HYPERCUBE - hiển thị nếu chưa tương tác
     if (typeof hypercube !== 'undefined' && !hypercube.interacted && currentMap === hypercube.map) {
         const el = document.getElementById('hypercube');
-        if (el) el.style.display = 'block';
+        if (el) {
+            el.style.display = 'block';
+            console.log('🎲 Hypercube shown at initGameUI');
+        }
+    }
+    
+    // ⭐ SYNC HYPERCUBE ACTIVE STATE
+    if (typeof hypercube !== 'undefined') {
+        hypercubeActive = !hypercube.interacted;
     }
     
     console.log('✅ Game UI khởi tạo xong');
