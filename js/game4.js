@@ -7,7 +7,8 @@ const INVENTORY_CONFIG = { TOTAL: 120, HOTBAR_SIZE: 6 };
 let inventory = new Array(INVENTORY_CONFIG.TOTAL).fill(null);
 let selectedSlot = 0;
 
-const ITEMS = {
+// ⭐ EXPORT ITEMS TO WINDOW FOR GLOBAL ACCESS
+window.ITEMS = {
     // === VŨ KHÍ AUTO (COMMON - PHỔ THÔNG) ===
     PISTOL: {
         id: 'pistol', name: 'Súng lục', icon: '🔫',

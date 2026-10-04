@@ -249,6 +249,7 @@ function initJoysticks() {
 // ĐẠN
 // ============================================================
 let bullets = [];
+const MAX_BULLETS = 200; // ⭐ GIỚI HẠN ĐẠN TỔNG
 
 // ============================================================
 // UI
@@ -477,6 +478,7 @@ const Hand = {
 // VỆT CHÉM (SLASH TRAILS) — SỐNG LÂU HƠN ANIMATION
 // ============================================================
 let slashTrails = [];
+const MAX_SLASH_TRAILS = 20; // ⭐ GIỚI HẠN VỆT CHÉM
 
 // ===== SCYTHE VFX SETTINGS — chỉnh 4 số này để test nhanh =====
 const SLASH_VFX = {
@@ -487,6 +489,10 @@ const SLASH_VFX = {
 };
 
 function addSlashTrail(angle, color) {
+    // ⭐ CLEANUP if over limit
+    if (slashTrails.length >= MAX_SLASH_TRAILS) {
+        slashTrails.shift();
+    }
     slashTrails.push({
         angle: angle,
         color: color || 'rgba(255, 40, 40, 1)',

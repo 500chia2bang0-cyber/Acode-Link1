@@ -39,6 +39,7 @@ function getBossConfig() {
 let killCount = 0;
 let boss = null;
 let bossBullets = [];
+const MAX_BOSS_BULLETS = 50; // ⭐ GIỚI HẠN ĐẠN BOSS
 let bossSpawned = false;
 
 // ============================================================

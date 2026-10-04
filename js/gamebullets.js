@@ -22,6 +22,11 @@ function fireAutoBullet(angle, damage) {
     }
     if (typeof player === 'undefined') return;
     
+    // ⭐ CLEANUP if over limit
+    if (bullets.length >= MAX_BULLETS) {
+        bullets.shift();
+    }
+    
     const cfg = BULLET_CONFIG.auto;
     
     bullets.push({
@@ -50,6 +55,11 @@ function fireSniperBullet(angle, damage, pierce) {
         return;
     }
     if (typeof player === 'undefined') return;
+    
+    // ⭐ CLEANUP if over limit
+    if (bullets.length >= MAX_BULLETS) {
+        bullets.shift();
+    }
     
     const cfg = BULLET_CONFIG.sniper;
     
@@ -142,6 +152,11 @@ function fireShotgunSniperBullet(angle, damage, item) {
     if (item.id === 'plasma') bulletColor = '#ff00ff';
     
     for (let i = 0; i < count; i++) {
+        // ⭐ CLEANUP if over limit
+        if (bullets.length >= MAX_BULLETS) {
+            bullets.shift();
+        }
+        
         const offset = (i - (count - 1) / 2) * (spread / (count - 1 || 1));
         const a = angle + offset;
         

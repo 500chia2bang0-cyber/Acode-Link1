@@ -188,6 +188,25 @@ function attachJoystickEvents() {
         if (!fireJoy.active || fireJoy.pointerId !== 'mouse') return;
         handleFireJoyRelease();
     });
+    
+    // ⭐ DESKTOP TESTING: Allow keyboard 'F' key to simulate fire joystick hold
+    window.addEventListener('keydown', function(e) {
+        if (e.code === 'KeyF' && !fireJoy.active) {
+            fireJoy.pointerId = 'keyboard';
+            fireJoy.active = true;
+            fireJoy._hasFired = false;
+            fireJoy.angle = 0; // Default angle (right)
+            fireJoy.setPos(window.innerWidth * 0.75, window.innerHeight * 0.5);
+            console.log('⌨️ Keyboard fire joystick activated (F key)');
+        }
+    });
+    
+    window.addEventListener('keyup', function(e) {
+        if (e.code === 'KeyF' && fireJoy.pointerId === 'keyboard') {
+            handleFireJoyRelease();
+            console.log('⌨️ Keyboard fire joystick released (F key)');
+        }
+    });
 
     console.log('✅ Gắn event joystick xong!');
 }

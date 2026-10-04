@@ -8,13 +8,21 @@ let droppedItems = [];
 
 const DROP_CONFIG = {
     ITEM_LIFETIME: 600,
-    PICKUP_RANGE: 40
+    PICKUP_RANGE: 40,
+    MAX_DROPPED_ITEMS: 50  // ⭐ GIỚI HẠN VẬT PHẨM RƠI ĐỂ TRÁNH FPS DROP
 };
 
 // Cập nhật vật phẩm rơi
 function updateDroppedItems() {
     if (typeof player === 'undefined') return;
     if (typeof addItemToInventory === 'undefined') return;
+    
+    // ⭐ CLEANUP: Remove excess items if over limit (oldest first)
+    if (droppedItems.length > DROP_CONFIG.MAX_DROPPED_ITEMS) {
+        const excess = droppedItems.length - DROP_CONFIG.MAX_DROPPED_ITEMS;
+        droppedItems.splice(0, excess);
+        console.warn(`🧹 Cleaned up ${excess} excess dropped items`);
+    }
     
     for (let i = droppedItems.length - 1; i >= 0; i--) {
         const drop = droppedItems[i];
@@ -229,8 +237,13 @@ function consumeItem(item) {
 
 // Hiệu ứng nổ
 let explosionEffects = [];
+const MAX_EXPLOSION_EFFECTS = 30; // ⭐ GIỚI HẠN HIỆU ỨNG NỔ
 
 function addExplosionEffect(x, y, radius) {
+    // ⭐ CLEANUP if over limit
+    if (explosionEffects.length >= MAX_EXPLOSION_EFFECTS) {
+        explosionEffects.shift();
+    }
     explosionEffects.push({ x, y, radius: 0, maxRadius: radius, life: 30, maxLife: 30 });
 }
 

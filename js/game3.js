@@ -164,6 +164,7 @@ const MONSTER_TYPES = {
 };
 
 let monsters = [];
+const MAX_MONSTERS = 100; // ⭐ GIỚI HẠN QUÁI TỔNG
 let spawnTimer = 0;
 
 // ============================================================
@@ -183,6 +184,9 @@ function spawnMonster() {
     if (!spawnActive) return;
     if (typeof player === 'undefined') return;
     if (typeof MAP === 'undefined') return;
+    
+    // ⭐ HARD LIMIT on total monsters
+    if (monsters.length >= MAX_MONSTERS) return;
 
     const sc = getSpawnConfig();
     if (monsters.length >= sc.maxMonsters) return;
